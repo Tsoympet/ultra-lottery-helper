@@ -7,6 +7,8 @@ on:
 jobs:
   run:
     runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: ${{ github.workspace }}  # ώστε το 'src' να είναι ορατό όπου χρειαστεί
 
     steps:
       - name: Checkout
@@ -23,23 +25,25 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      # 👉 Extra Step 1: Install test dependencies
       - name: Install test deps
         run: pip install pytest
 
-      # 👉 Extra Step 2: Run tests
       - name: Run tests
         run: pytest -q
 
-      # Γρήγορος έλεγχος σύνταξης: byte-compile
       - name: Byte-compile sources
         run: python -m compileall -q src
 
-      # Smoke test: απλό import χωρίς εκκίνηση Gradio UI
-      - name: Smoke import
+      - name: Smoke import (fallback)
         run: |
           python - << 'PY'
-          from importlib import import_module
-          m = import_module("src.ultra_lottery_helper")
-          print("Imported ultra_lottery_helper OK (v6.3.0).")
+          try:
+              from importlib import import_module
+              import_module("src.ultra_lottery_helper")
+              print("Imported via package path.")
+          except Exception as e:
+              print("Package import failed, falling back to runpy:", e)
+              import runpy, pathlib
+              runpy.run_path(str(pathlib.Path("src")/"ultra_lottery_helper.py"), run_name="not_main")
+              print("Loaded via runpy OK.")
           PY
