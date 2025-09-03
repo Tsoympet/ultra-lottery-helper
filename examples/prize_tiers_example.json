@@ -1,0 +1,11 @@
+[
+  {"main": 5, "sec": 2, "prize": 10000000},
+  {"main": 5, "sec": 1, "prize": 500000},
+  {"main": 5, "sec": 0, "prize": 100000},
+  {"main": 4, "sec": 2, "prize": 10000},
+  {"main": 4, "sec": 1, "prize": 500},
+  {"main": 4, "sec": 0, "prize": 100},
+  {"main": 3, "sec": 2, "prize": 50},
+  {"main": 3, "sec": 1, "prize": 20},
+  {"main": 2, "sec": 2, "prize": 10}
+]

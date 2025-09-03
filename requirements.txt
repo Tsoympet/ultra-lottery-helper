@@ -1,0 +1,10 @@
+numpy
+pandas
+matplotlib
+gradio
+requests
+lxml
+scikit-learn
+lightgbm
+xgboost
+prophet
