@@ -23,11 +23,19 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
+      # 👉 Extra Step 1: Install test dependencies
+      - name: Install test deps
+        run: pip install pytest
+
+      # 👉 Extra Step 2: Run tests
+      - name: Run tests
+        run: pytest -q
+
       # Γρήγορος έλεγχος σύνταξης: byte-compile
       - name: Byte-compile sources
         run: python -m compileall -q src
 
-      # Smoke test: απλό import χωρίς εκκίνηση του Gradio UI
+      # Smoke test: απλό import χωρίς εκκίνηση Gradio UI
       - name: Smoke import
         run: |
           python - << 'PY'
