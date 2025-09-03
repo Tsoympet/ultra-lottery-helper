@@ -1,1 +1,28 @@
-
+name: Run Lottery Helper
+on:
+  schedule:
+    - cron: '0 0 * * *' # Daily at midnight
+  workflow_dispatch:
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: |
+          pip install numpy pandas matplotlib gradio requests lxml
+          pip install lightgbm xgboost prophet scikit-learn
+      - name: Run script
+        run: |
+          python ultra-lottery-helper/lottery_helper_v6_colab.py
+      - name: Commit outputs
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+          git add ultra-lottery-helper/exports/tzoker/*
+          git commit -m "Update TZOKER predictions" || echo "No changes"
+          git push
