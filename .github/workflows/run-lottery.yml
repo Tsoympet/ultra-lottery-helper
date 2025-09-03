@@ -1,28 +1,37 @@
-name: Run Lottery Helper
+name: CI
+
 on:
-  schedule:
-    - cron: '0 0 * * *' # Daily at midnight
-  workflow_dispatch:
+  push:
+  pull_request:
+
 jobs:
   run:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.10"
+          cache: "pip"
+
       - name: Install dependencies
         run: |
-          pip install numpy pandas matplotlib gradio requests lxml
-          pip install lightgbm xgboost prophet scikit-learn
-      - name: Run script
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      # Γρήγορος έλεγχος σύνταξης: byte-compile
+      - name: Byte-compile sources
+        run: python -m compileall -q src
+
+      # Smoke test: απλό import χωρίς εκκίνηση του Gradio UI
+      - name: Smoke import
         run: |
-          python ultra-lottery-helper/lottery_helper_v6_colab.py
-      - name: Commit outputs
-        run: |
-          git config user.name "GitHub Action"
-          git config user.email "action@github.com"
-          git add ultra-lottery-helper/exports/tzoker/*
-          git commit -m "Update TZOKER predictions" || echo "No changes"
-          git push
+          python - << 'PY'
+          from importlib import import_module
+          m = import_module("src.ultra_lottery_helper")
+          print("Imported ultra_lottery_helper OK (v6.3.0).")
+          PY
