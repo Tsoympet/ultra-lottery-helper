@@ -1,9 +1,9 @@
 [Setup]
 AppName=Ultra Lottery Helper
 AppVersion={#MyAppVersion}
-AppPublisher=Your Name
-AppPublisherURL=https://github.com/yourname/ultra-lottery-helper
-AppSupportURL=https://github.com/yourname/ultra-lottery-helper/issues
+AppPublisher=Tsoympet
+AppPublisherURL=https://github.com/Tsoympet/ultra-lottery-helper
+AppSupportURL=https://github.com/Tsoympet/ultra-lottery-helper/issues
 DefaultDirName={pf}\UltraLotteryHelper
 DefaultGroupName=Ultra Lottery Helper
 UninstallDisplayIcon={app}\ultra_lottery_helper.exe
