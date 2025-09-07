@@ -1,0 +1,60 @@
+name: Build Windows Installer
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "pip"
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          if (Test-Path requirements.txt) { pip install -r requirements.txt }
+          pip install pyinstaller
+      - name: Build EXE with PyInstaller (with icon if present)
+        shell: pwsh
+        run: |
+          if (Test-Path build) { rmdir build -Recurse -Force }
+          if (Test-Path dist)  { rmdir dist  -Recurse -Force }
+          $iconFlag = (Test-Path assets\icon.ico) ? "--icon=assets\icon.ico" : ""
+          pyinstaller --onefile --noconsole $iconFlag src\ultra_lottery_helper.py
+      - name: Install Inno Setup (via Chocolatey)
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+      - name: Stamp version into ISS (from tag)
+        shell: pwsh
+        run: |
+          $ver = "${env:GITHUB_REF_NAME}"
+          if (-not $ver) { $ver = "0.0.0" }
+          if ($ver.StartsWith("refs/tags/")) { $ver = $ver.Substring(10) }
+          if ($ver.StartsWith("v")) { $ver = $ver.Substring(1) }
+          '#define MyAppVersion "' + $ver + '"' | Out-File -FilePath version.iss -Encoding ASCII
+          Get-Content ultra_lottery_helper.iss | Add-Content version.iss
+          Move-Item -Force version.iss ultra_lottery_helper.iss
+      - name: Build Installer with Inno Setup
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (!(Test-Path $iscc)) { $iscc = "${env:ProgramFiles}\Inno Setup 6\ISCC.exe" }
+          if (!(Test-Path $iscc)) { throw "ISCC.exe not found. Is Inno Setup installed?" }
+          & "$iscc" ultra_lottery_helper.iss
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: UltraLotteryHelperInstaller
+          path: dist_installer\UltraLotteryHelperInstaller_*.exe
+      - name: Upload portable exe (optional)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: UltraLotteryHelperPortableEXE
+          path: dist\ultra_lottery_helper.exe
