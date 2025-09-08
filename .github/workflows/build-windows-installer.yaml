@@ -1,35 +1,55 @@
 name: Build Windows Installer
+
 on:
   workflow_dispatch:
   release:
     types: [published]
+
+permissions:
+  contents: write   # χρειάζεται για να ανεβάσουμε assets στο Release
+
 jobs:
   build-windows:
     runs-on: windows-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
           cache: "pip"
+
       - name: Install dependencies
         shell: pwsh
         run: |
           python -m pip install --upgrade pip
           if (Test-Path requirements.txt) { pip install -r requirements.txt }
           pip install pyinstaller
-      - name: Build EXE with PyInstaller (with icon if present)
+
+      - name: Clean old build folders
         shell: pwsh
         run: |
-          if (Test-Path build) { rmdir build -Recurse -Force }
-          if (Test-Path dist)  { rmdir dist  -Recurse -Force }
-          $iconFlag = (Test-Path assets\icon.ico) ? "--icon=assets\icon.ico" : ""
-          pyinstaller --onefile --noconsole $iconFlag src\ultra_lottery_helper.py
+          if (Test-Path build) { Remove-Item build -Recurse -Force }
+          if (Test-Path dist)  { Remove-Item dist  -Recurse -Force }
+
+      - name: Build EXE with PyInstaller (native desktop)
+        shell: pwsh
+        run: |
+          $iconFlag = ""
+          if (Test-Path "assets\icon.ico") { $iconFlag = "--icon=assets\icon.ico" }
+          # Bundle assets folder so το icon (και μελλοντικά assets) είναι μέσα στο exe dir
+          pyinstaller --onefile --noconsole $iconFlag `
+            --name ultra_lottery_helper `
+            --add-data "assets;assets" `
+            src\ulh_desktop.py
+
       - name: Install Inno Setup (via Chocolatey)
         shell: pwsh
         run: choco install innosetup --no-progress -y
+
       - name: Stamp version into ISS (from tag)
         shell: pwsh
         run: |
@@ -40,21 +60,49 @@ jobs:
           '#define MyAppVersion "' + $ver + '"' | Out-File -FilePath version.iss -Encoding ASCII
           Get-Content ultra_lottery_helper.iss | Add-Content version.iss
           Move-Item -Force version.iss ultra_lottery_helper.iss
+
       - name: Build Installer with Inno Setup
         shell: pwsh
         run: |
+          if (-not (Test-Path "dist_installer")) { New-Item -ItemType Directory -Path dist_installer | Out-Null }
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
           if (!(Test-Path $iscc)) { $iscc = "${env:ProgramFiles}\Inno Setup 6\ISCC.exe" }
           if (!(Test-Path $iscc)) { throw "ISCC.exe not found. Is Inno Setup installed?" }
           & "$iscc" ultra_lottery_helper.iss
-      - name: Upload installer artifact
+
+      - name: Compute SHA256 checksums
+        shell: pwsh
+        run: |
+          $exe = "dist\ultra_lottery_helper.exe"
+          $inst = Get-ChildItem -Path "dist_installer" -Filter "UltraLotteryHelperInstaller_*.exe" | Select-Object -First 1
+          if (!(Test-Path $exe)) { throw "Portable exe not found at dist\ultra_lottery_helper.exe" }
+          if ($null -eq $inst) { throw "Installer exe not found in dist_installer" }
+
+          $exeHash  = (Get-FileHash -Path $exe -Algorithm SHA256).Hash
+          $instHash = (Get-FileHash -Path $inst.FullName -Algorithm SHA256).Hash
+
+          "SHA256 (portable exe): $exeHash"  | Out-File -FilePath sha256.txt -Encoding ascii
+          "SHA256 (installer):     $instHash" | Out-File -FilePath sha256.txt -Append -Encoding ascii
+
+          Write-Host "== SHA256 =="
+          Get-Content sha256.txt
+
+      - name: Upload artifacts (installer, exe, checksums)
         uses: actions/upload-artifact@v4
         with:
-          name: UltraLotteryHelperInstaller
-          path: dist_installer\UltraLotteryHelperInstaller_*.exe
-      - name: Upload portable exe (optional)
-        if: always()
-        uses: actions/upload-artifact@v4
+          name: UltraLotteryHelper_build
+          path: |
+            dist\ultra_lottery_helper.exe
+            dist_installer\UltraLotteryHelperInstaller_*.exe
+            sha256.txt
+
+      - name: Attach assets to the GitHub Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
         with:
-          name: UltraLotteryHelperPortableEXE
-          path: dist\ultra_lottery_helper.exe
+          files: |
+            dist/ultra_lottery_helper.exe
+            dist_installer/UltraLotteryHelperInstaller_*.exe
+            sha256.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
