@@ -8,7 +8,9 @@ jobs:
   run:
     runs-on: ubuntu-latest
     env:
-      PYTHONPATH: ${{ github.workspace }}  # ώστε το 'src' να είναι ορατό όπου χρειαστεί
+      PYTHONPATH: ${{ github.workspace }}   # για να φαίνεται το 'src' ως package root
+      QT_QPA_PLATFORM: offscreen            # headless Qt
+      MPLBACKEND: Agg                       # headless matplotlib
 
     steps:
       - name: Checkout
@@ -25,25 +27,41 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Install test deps
+      - name: Install test deps (pytest)
         run: pip install pytest
 
-      - name: Run tests
-        run: pytest -q
+      - name: Run tests (if tests/ exists)
+        run: |
+          if [ -d tests ]; then
+            echo "Running pytest..."
+            pytest -q
+          else
+            echo "No tests/ directory; skipping pytest."
+          fi
 
       - name: Byte-compile sources
-        run: python -m compileall -q src
+        run: |
+          if [ -d src ]; then
+            python -m compileall -q src
+          fi
 
-      - name: Smoke import (fallback)
+      - name: Smoke import — core module
         run: |
           python - << 'PY'
-          try:
-              from importlib import import_module
-              import_module("src.ultra_lottery_helper")
-              print("Imported via package path.")
-          except Exception as e:
-              print("Package import failed, falling back to runpy:", e)
-              import runpy, pathlib
-              runpy.run_path(str(pathlib.Path("src")/"ultra_lottery_helper.py"), run_name="not_main")
-              print("Loaded via runpy OK.")
+          import sys, os
+          sys.path.insert(0, os.getcwd())
+          import importlib
+          importlib.import_module("src.ultra_lottery_helper")
+          print("OK: imported src.ultra_lottery_helper")
+          PY
+
+      - name: Smoke import — desktop UI (PySide6 offscreen)
+        run: |
+          python - << 'PY'
+          import os, sys
+          os.environ["QT_QPA_PLATFORM"] = "offscreen"
+          sys.path.insert(0, os.getcwd())
+          import importlib
+          importlib.import_module("src.ulh_desktop")
+          print("OK: imported src.ulh_desktop")
           PY
