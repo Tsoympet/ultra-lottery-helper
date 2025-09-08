@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-echo === Ultra Lottery Helper - Local Build Script ===
+echo === Ultra Lottery Helper - Local Build Script (Native Desktop) ===
 
 REM Clean previous builds
 if exist build rmdir /s /q build
@@ -21,11 +21,14 @@ if exist requirements.txt (
 REM Install PyInstaller if missing
 pyinstaller --version >nul 2>&1 || python -m pip install pyinstaller
 
-REM Build portable EXE with PyInstaller
+REM Build portable EXE with PyInstaller (native desktop entry point)
 echo [1/2] Building portable EXE with PyInstaller...
 set ICON_FLAG=
 if exist assets\icon.ico set ICON_FLAG=--icon=assets\icon.ico
-pyinstaller --onefile --noconsole %ICON_FLAG% src\ultra_lottery_helper.py
+pyinstaller --onefile --noconsole %ICON_FLAG% ^
+  --name ultra_lottery_helper ^
+  --add-data "assets;assets" ^
+  src\ulh_desktop.py
 if errorlevel 1 (
     echo PyInstaller build failed!
     exit /b 1
