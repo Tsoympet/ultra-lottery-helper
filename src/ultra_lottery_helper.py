@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Ultra Lottery Helper — Offline Suite (v6.3.0, Colab-Compatible)
+Ultra Lottery Helper — Offline Suite (v6.3.0, Native-Core)
 - Offline by default; optional online history fetching
 - History auto-merge per game (CSV/XLS/XLSX) from data/history/<game>/
 - EWMA + BMA + Luck/Unluck (adaptive) + ML ensemble (Prophet, LightGBM, RF, XGBoost, SVM)
@@ -14,8 +14,8 @@ Ultra Lottery Helper — Offline Suite (v6.3.0, Colab-Compatible)
 - Optional EV re-rank (cost-aware) with OPAP-style defaults
 - Diagnostics (frequency/recency/last-digit/pairs/odd-even)
 - Exports CSV/PNG (6 columns) into ./exports/<game>/
-- Plot caching per (game, history signature)
-- Debounce-style UI feedback for heavy sliders
+- Plot caching helper (_quick_df_sig) usable by any UI
+- No Gradio dependencies (pure core for native desktop/CLI)
 """
 
 import os
@@ -32,7 +32,6 @@ import multiprocessing as mp
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import gradio as gr
 
 # Optional ML libraries (safe imports)
 try:
@@ -100,7 +99,7 @@ def _ensure_game_export_dir(game: str):
     return path
 
 def _quick_df_sig(df: pd.DataFrame, game: str) -> str:
-    """Signature of history to drive plot cache."""
+    """Signature of history to drive plot cache in UIs (e.g., native desktop)."""
     if df is None or len(df) == 0:
         return f"{game}|empty"
     cols = [c for c in df.columns if c in ("n1","n2","n3","n4","n5","n6","e1","e2","joker","date")]
@@ -110,6 +109,14 @@ def _quick_df_sig(df: pd.DataFrame, game: str) -> str:
     buf = sample.to_csv(index=False).encode("utf-8")
     h = hashlib.sha1(buf).hexdigest()
     return f"{game}|{len(df)}|{h}"
+
+# ---- Helper for native (no gradio) progress ----
+class _NoOpProgress:
+    def tqdm(self, iterable, desc=None):
+        return iterable
+
+def _ensure_progress(progress):
+    return progress if (progress is not None and hasattr(progress, "tqdm")) else _NoOpProgress()
 
 # =============================================================================
 # Game specs + OPAP-style price defaults
@@ -597,7 +604,8 @@ def generate_wheels(key_numbers: List[int], pick_size: int, cfg: Config, spec: G
     wheels = list(itertools.combinations(key_numbers, pick_size))
     return [sorted(w) for w in wheels if not violates_constraints(w, cfg, spec)]
 
-def generate_candidates(df: pd.DataFrame, game: str, cfg: Config, progress=gr.Progress()) -> Tuple[List[Tuple[List[int], object, float]], str]:
+def generate_candidates(df: pd.DataFrame, game: str, cfg: Config, progress=None) -> Tuple[List[Tuple[List[int], object, float]], str]:
+    progress = _ensure_progress(progress)
     spec = GAMES[game]
     mpb, spb = build_probs(df, game, cfg)
     rng = _rng(cfg.seed)
@@ -654,10 +662,10 @@ def generate_candidates(df: pd.DataFrame, game: str, cfg: Config, progress=gr.Pr
         if key in seen: continue
         seen.add(key); out.append((m, s, sc))
         if len(out) >= cfg.topk: break
-    
+
     if len(out) < cfg.topk // 2:
         warning += f"Warning: Only {len(out)} candidates generated (target {cfg.topk}). Consider relaxing constraints."
-    
+
     return out, warning
 
 # =============================================================================
@@ -954,338 +962,3 @@ def export_six_to_png(df: pd.DataFrame, game: str, title: str, prefix: str) -> s
     plt.savefig(path, dpi=180, bbox_inches='tight')
     plt.close()
     return path
-
-# =============================================================================
-# Gradio UI
-# =============================================================================
-
-def make_game_tab(game: str):
-    spec = GAMES[game]
-    state_hist = gr.State(pd.DataFrame())
-    state_port = gr.State(pd.DataFrame())
-    state_log = gr.State("")
-    state_beta = gr.State(0.10)
-    state_gamma = gr.State(0.05)
-    state_plot_cache = gr.State({})  # plot cache per tab
-
-    with gr.Tab(game):
-        gr.Markdown(f"### {game} — Load history, train, and get 6 recommended columns")
-        gr.Markdown("**Disclaimer**: Lotteries are random; predictions are probabilistic and not guaranteed. Play responsibly.")
-
-        with gr.Row():
-            use_online = gr.Checkbox(value=False, label="Fetch online history (optional)")
-            btn_reload = gr.Button("Reload history", variant="secondary")
-            btn_preset = gr.Button("Preset: Max Run", variant="secondary")
-
-        hist_log = gr.Markdown(label="History Load Log")
-        hist_preview = gr.Dataframe(label=f"{game} — History preview (first 200 rows)", interactive=False, height=220)
-
-        with gr.Accordion("Advanced settings", open=False):
-            with gr.Row():
-                iterations = gr.Slider(1000, 500000, value=50000, step=1000, label="Iterations (samples)")
-                topk = gr.Slider(10, 1000, value=200, step=10, label="Top-K candidates")
-                seed = gr.Number(value=42, label="Seed")
-            with gr.Row():
-                use_bma = gr.Checkbox(value=True, label="Use BMA")
-                use_ewma = gr.Checkbox(value=True, label="Use EWMA")
-                use_ml = gr.Checkbox(value=False, label="Use ML hook (experimental, includes Prophet)")
-                half_life = gr.Slider(20, 300, value=120, step=5, label="EWMA Half-life (draws)")
-            with gr.Row():
-                bma_w_freq = gr.Slider(0.0, 1.0, value=0.5, step=0.05, label="BMA weight — freq")
-                bma_w_rec  = gr.Slider(0.0, 1.0, value=0.3, step=0.05, label="BMA weight — recency/EWMA")
-                bma_w_ml   = gr.Slider(0.0, 1.0, value=0.2, step=0.05, label="BMA weight — ML")
-            with gr.Row():
-                luck_beta = gr.Slider(0.0, 0.5, value=0.10, step=0.01, label="Luck β (drought boost)")
-                unluck_gamma = gr.Slider(0.0, 0.5, value=0.05, step=0.01, label="Unluck γ (recent damp)")
-            with gr.Row():
-                min_even = gr.Slider(0, spec.main_pick, value=2, step=1, label="Min even")
-                max_even = gr.Slider(0, spec.main_pick, value=3, step=1, label="Max even")
-                min_odd  = gr.Slider(0, spec.main_pick, value=2, step=1, label="Min odd")
-                max_odd  = gr.Slider(0, spec.main_pick, value=3, step=1, label="Max odd")
-            with gr.Row():
-                min_low = gr.Slider(0, spec.main_pick, value=2, step=1, label=f"Min low (1-{spec.main_max//2})")
-                max_low = gr.Slider(0, spec.main_pick, value=3, step=1, label="Max low")
-                max_same_lastdigit = gr.Slider(1, 5, value=3, step=1, label="Max same last-digit")
-            with gr.Row():
-                sum_min = gr.Slider(30, 320, value=50 if spec.name!="LOTTO" else 80, step=1, label="Sum min")
-                sum_max = gr.Slider(80, 340, value=190 if spec.name!="LOTTO" else 240, step=1, label="Sum max")
-                max_consecutive = gr.Slider(1, 6, value=3, step=1, label="Max consecutive")
-            with gr.Row():
-                optimizer = gr.Dropdown(choices=["DPP","Greedy"], value="DPP", label="Portfolio selector")
-                portfolio_size = gr.Slider(1, 12, value=6, step=1, label="Portfolio size (columns)")
-                use_wheels = gr.Checkbox(value=False, label="Use lottery wheels")
-                wheel_keys = gr.Textbox(value="", label="Wheel key numbers (comma-separated, e.g., 1,2,3,4,5,6)")
-            with gr.Row():
-                monte_sims = gr.Slider(1000, 50000, value=10000, step=1000, label="Monte Carlo simulations")
-
-        with gr.Accordion("EV re-rank (optional, manual tiers, cost-aware)", open=False):
-            enable_ev = gr.Checkbox(value=False, label="Enable EV re-rank")
-            ev_weight = gr.Slider(0.0, 3.0, value=1.0, step=0.1, label="EV weight vs model score")
-            with gr.Row():
-                ev_ticket_price = gr.Number(value=OPAP_TICKET_PRICE_DEFAULTS.get(game, 2.0), label="Ticket price (EUR)")
-                btn_set_opap_price = gr.Button("Use OPAP default for this game", variant="secondary")
-            ev_tiers_json = gr.Code(
-                value="[]",
-                language="json",
-                label="Prize tiers JSON (list of {\"main\":k,\"sec\":s,\"prize\":amount})"
-            )
-
-        with gr.Row():
-            btn_train = gr.Button("Train (walk-forward CV)", variant="secondary")
-            folds = gr.Slider(4, 16, value=10, step=1, label="CV folds")
-            btn_learn = gr.Button("Self-learning replay (light)", variant="secondary")
-
-        # Debounce-style feedback label (no heavy compute on drag)
-        pending_lbl = gr.Markdown("", visible=False)
-
-        cv_out = gr.Dataframe(label="Walk-forward CV results", interactive=False, height=180)
-        learn_out = gr.Markdown("")
-
-        with gr.Row():
-            btn_predict = gr.Button("Predict Portfolio", variant="primary")
-            btn_export_csv = gr.Button("Export 6 columns → CSV", variant="secondary")
-            btn_export_png = gr.Button("Export 6 columns → PNG", variant="secondary")
-
-        warning_out = gr.Markdown("")
-        risk_out = gr.Markdown("")
-        portfolio_df = gr.Dataframe(label="Recommended 6 columns", interactive=False, height=200)
-        export_links = gr.Markdown("")
-
-        with gr.Row():
-            plot1 = gr.Plot(label="Frequency")
-            plot2 = gr.Plot(label="Recency")
-            plot3 = gr.Plot(label="Last-digit distribution")
-        with gr.Row():
-            plot4 = gr.Plot(label="Significant pairs heatmap")
-            plot5 = gr.Plot(label="Odd/Even distribution")
-
-        # --- inner fns ---
-        def _reload(use_online_flag):
-            df, log = _load_all_history(game, use_online=bool(use_online_flag))
-            return log, df.head(200), df
-
-        def _preset():
-            return 200000, 500, 777, True, True, False, 160, 0.5, 0.3, 0.2, 0.12, 0.06
-
-        def _set_opap_price():
-            return float(OPAP_TICKET_PRICE_DEFAULTS.get(game, 2.0))
-
-        def _collect_cfg(iterations_v, topk_v, seed_v, use_bma_v, use_ewma_v, use_ml_v,
-                         half_life_v, bma_wf, bma_wr, bma_wml, luck_b, unluck_g,
-                         min_e, max_e, min_o, max_o, min_l, max_l, max_ld, smin, smax, maxc,
-                         opt, pk, use_wheels_v, wheel_keys_v, enable_ev_v, ev_w, ev_price, ev_json,
-                         use_online_flag, monte_sims_v):
-            cfg = Config(
-                iterations=int(iterations_v), topk=int(topk_v), seed=int(seed_v),
-                use_bma=bool(use_bma_v), bma_w_freq=float(bma_wf), bma_w_rec=float(bma_wr), bma_w_ml=float(bma_wml),
-                use_ewma=bool(use_ewma_v), half_life=int(half_life_v), use_ml=bool(use_ml_v),
-                luck_beta=float(luck_b), unluck_gamma=float(unluck_g),
-                min_even=int(min_e), max_even=int(max_e), min_odd=int(min_o), max_odd=int(max_o),
-                min_low=int(min_l), max_low=int(max_l), max_same_lastdigit=int(max_ld),
-                sum_min=int(smin), sum_max=int(smax), max_consecutive=int(maxc),
-                optimizer=str(opt), portfolio_size=int(pk),
-                use_wheels=bool(use_wheels_v), wheel_keys=str(wheel_keys_v or ""),
-                enable_ev=bool(enable_ev_v), ev_weight=float(ev_w), ev_ticket_price=float(ev_price),
-                ev_tiers_json=str(ev_json or "[]"),
-                use_online=bool(use_online_flag), monte_sims=int(monte_sims_v)
-            )
-            return cfg
-
-        def _train(df, *cfg_flat, folds=10):
-            if df is None or len(df)==0: return pd.DataFrame()
-            cfg = _collect_cfg(*cfg_flat)
-            res = evaluate_cv(df, game, cfg, folds=int(folds))
-            return res
-
-        def _learn(df, *cfg_flat):
-            if df is None or len(df)==0:
-                return "No history loaded.", state_beta.value, state_gamma.value
-            cfg = _collect_cfg(*cfg_flat)
-            stats = self_learning_replay(df, game, cfg, rounds=2)
-            msg = f"**Self-learning replay done**  \nβ={stats['beta']:.3f}, γ={stats['gamma']:.3f}, score={stats['score']:+.1f}"
-            return msg, stats['beta'], stats['gamma']
-
-        def _predict(df, *cfg_flat, progress=gr.Progress()):
-            if df is None or len(df)==0:
-                return pd.DataFrame(), None, None, None, None, None, "No history loaded.", "", None, state_beta.value, state_gamma.value, state_plot_cache.value
-            cfg = _collect_cfg(*cfg_flat)
-            cands, warning = generate_candidates(df, game, cfg, progress=progress)
-            main_probs, sec_probs = build_probs(df, game, cfg)
-            port = dpp_select(cands, game, cfg) if cfg.optimizer=="DPP" else cands[:cfg.portfolio_size]
-            mean_hit, risk_score = monte_carlo_risk(port, main_probs, sec_probs, spec, cfg)
-            baseline = 1.2 if spec.name!="LOTTO" else 1.4
-            cfg.luck_beta += 0.01 if mean_hit < baseline else -0.01
-            cfg.luck_beta = max(0.0, min(0.5, cfg.luck_beta))
-            cfg.unluck_gamma += 0.005 if mean_hit < baseline else -0.005
-            cfg.unluck_gamma = max(0.0, min(0.5, cfg.unluck_gamma))
-            port_ev = apply_ev_rerank(game, cfg, port, main_probs, sec_probs)
-            port_ev = sorted(port_ev, key=lambda x: x[2] - 0.5 * risk_score, reverse=True)
-            rows = []
-            headers = [f"n{i+1}" for i in range(spec.main_pick if spec.name!="LOTTO" else 6)]
-            if spec.sec_pick==1: headers += ["bonus"]
-            elif spec.sec_pick==2: headers += ["e1","e2"]
-            for m,s,sc,nev in port_ev[:6]:
-                row = list(m)
-                if spec.sec_pick==1: row += [s]
-                elif spec.sec_pick==2: row += list(s)
-                rows.append(row)
-            out = pd.DataFrame(rows, columns=headers)
-
-            # --- Plot caching ---
-            cache_key = _quick_df_sig(df, game)
-            cache: dict = state_plot_cache.value or {}
-            cached = cache.get(cache_key, {})
-            if all(k in cached for k in ("fig1","fig2","fig3","fig4","fig5")):
-                fig1, fig2, fig3, fig4, fig5 = (
-                    cached["fig1"], cached["fig2"], cached["fig3"], cached["fig4"], cached["fig5"]
-                )
-            else:
-                fig1 = plot_frequency(df, game)
-                fig2 = plot_recency(df, game)
-                fig3 = plot_last_digit(df, game)
-                fig4 = plot_pairs_heatmap(df, game)
-                fig5 = plot_odd_even(df, game)
-                cached = {"fig1": fig1, "fig2": fig2, "fig3": fig3, "fig4": fig4, "fig5": fig5}
-                cache[cache_key] = cached
-                state_plot_cache.value = cache
-
-            risk_msg = f"Portfolio Risk: Mean Hits = {mean_hit:.2f}, Std = {risk_score:.2f} (lower is safer)\\nUpdated β={cfg.luck_beta:.3f}, γ={cfg.unluck_gamma:.3f}"
-            return out, out, fig1, fig2, fig3, fig5, warning, risk_msg, fig4, cfg.luck_beta, cfg.unluck_gamma, state_plot_cache.value
-
-        def _export(df, game_label=game):
-            if df is None or len(df)==0:
-                return f"{game_label}: Nothing to export."
-            p_csv = export_six_to_csv(df, game_label, prefix=f"{game_label.lower()}_six")
-            p_png = export_six_to_png(df, game_label, title=f"{game_label} — 6 Recommended Columns", prefix=f"{game_label.lower()}_six")
-            return f"**{game_label}** — **CSV:** [{os.path.basename(p_csv)}](/file={p_csv})  \\n**PNG:** [{os.path.basename(p_png)}](/file={p_png})"
-
-        # --- debounce-style feedback (lightweight) ---
-        def _mark_pending(_=None):
-            return "**Settings changed** (will apply on next Predict/Train).", True
-        def _clear_pending():
-            return "", False
-
-        for sl in (iterations, topk, half_life, monte_sims):
-            sl.input(_mark_pending, outputs=[pending_lbl, gr.State(True)])
-            sl.release(_clear_pending, outputs=[pending_lbl, gr.State(False)])
-
-        # --- wiring ---
-        btn_reload.click(_reload, inputs=[use_online], outputs=[hist_log, hist_preview, state_hist])
-        btn_preset.click(_preset, outputs=[
-            iterations, topk, seed, use_bma, use_ewma, use_ml, half_life, bma_w_freq, bma_w_rec, bma_w_ml, luck_beta, unluck_gamma
-        ])
-        btn_set_opap_price.click(_set_opap_price, outputs=[ev_ticket_price])
-
-        btn_train.click(
-            _train,
-            inputs=[state_hist, iterations, topk, seed, use_bma, use_ewma, use_ml, half_life, bma_w_freq, bma_w_rec, bma_w_ml,
-                    luck_beta, unluck_gamma, min_even, max_even, min_odd, max_odd, min_low, max_low, max_same_lastdigit,
-                    sum_min, sum_max, max_consecutive, optimizer, portfolio_size, use_wheels, wheel_keys,
-                    enable_ev, ev_weight, ev_ticket_price, ev_tiers_json, use_online, monte_sims, folds],
-            outputs=[cv_out]
-        )
-
-        btn_learn.click(
-            _learn,
-            inputs=[state_hist, iterations, topk, seed, use_bma, use_ewma, use_ml, half_life, bma_w_freq, bma_w_rec, bma_w_ml,
-                    luck_beta, unluck_gamma, min_even, max_even, min_odd, max_odd, min_low, max_low, max_same_lastdigit,
-                    sum_min, sum_max, max_consecutive, optimizer, portfolio_size, use_wheels, wheel_keys,
-                    enable_ev, ev_weight, ev_ticket_price, ev_tiers_json, use_online, monte_sims],
-            outputs=[learn_out, state_beta, state_gamma]
-        )
-
-        btn_predict.click(
-            _predict,
-            inputs=[state_hist, iterations, topk, seed, use_bma, use_ewma, use_ml, half_life, bma_w_freq, bma_w_rec, bma_w_ml,
-                    luck_beta, unluck_gamma, min_even, max_even, min_odd, max_odd, min_low, max_low, max_same_lastdigit,
-                    sum_min, sum_max, max_consecutive, optimizer, portfolio_size, use_wheels, wheel_keys,
-                    enable_ev, ev_weight, ev_ticket_price, ev_tiers_json, use_online, monte_sims],
-            outputs=[portfolio_df, state_port, plot1, plot2, plot3, plot5, warning_out, risk_out, plot4, state_beta, state_gamma, state_plot_cache]
-        )
-
-        btn_export_csv.click(_export, inputs=[state_port], outputs=[export_links])
-        btn_export_png.click(_export, inputs=[state_port], outputs=[export_links])
-
-    return state_hist, state_port, state_log, state_beta, state_gamma
-
-def build_history_tab():
-    with gr.Tab("History"):
-        gr.Markdown(textwrap.dedent("""
-        ### History folders (place files before reloading each game)
-        - `/content/data/history/tzoker/` — CSV/XLSX cols: **n1..n5, joker** (optional `date`)
-        - `/content/data/history/lotto/` — CSV/XLSX cols: **n1..n6** (optional `date`)
-        - `/content/data/history/eurojackpot/` — CSV/XLSX cols: **n1..n5, e1, e2** (optional `date`)
-
-        Multiple files auto-merge, rows are validated and normalized. Case-insensitive headers.
-        Include a `date` column (e.g., YYYY-MM-DD) for best results with Prophet (time-series model in ML ensemble, used when `use_ml=True` and ≥120 draws with valid dates are available).
-        Use optional online fetch for a quick refresh; local files are recommended for reliability.
-
-        **Colab Instructions**:
-        1. Run the setup cell below to install dependencies.
-        2. Upload history files to `/content/data/history/<game>/` using the Colab file uploader.
-        3. Alternatively, enable **Fetch online** in each game tab.
-
-        ```bash
-        !pip -q install numpy pandas matplotlib gradio requests lxml
-        !pip -q install lightgbm xgboost prophet scikit-learn
-        !mkdir -p /content/data/history/tzoker /content/data/history/lotto /content/data/history/eurojackpot
-        !mkdir -p /content/exports/tzoker /content/exports/lotto /content/exports/eurojackpot
-        ```
-        """))
-
-def build_export_tab(states: Dict[str, gr.State]):
-    with gr.Tab("Export"):
-        gr.Markdown("Export last 6 columns for each game to /content/exports/<game>/.")
-
-        with gr.Row():
-            btn_tz = gr.Button("Export TZOKER")
-            btn_lo = gr.Button("Export LOTTO")
-            btn_ej = gr.Button("Export EUROJACKPOT")
-        md = gr.Markdown("")
-
-        def _exp(df, label):
-            if df is None or len(df) == 0:
-                return f"{label}: Nothing to export."
-            p_csv = export_six_to_csv(df, label, prefix=f"{label.lower()}_six")
-            p_png = export_six_to_png(df, label, title=f"{label} — 6 Recommended Columns", prefix=f"{label.lower()}_six")
-            return f"**{label}** — **CSV:** [{os.path.basename(p_csv)}](/file={p_csv})  \\n**PNG:** [{os.path.basename(p_png)}](/file={p_png})"
-
-        btn_tz.click(_exp, inputs=[states["TZOKER_port"], gr.State("TZOKER")], outputs=[md])
-        btn_lo.click(_exp, inputs=[states["LOTTO_port"], gr.State("LOTTO")], outputs=[md])
-        btn_ej.click(_exp, inputs=[states["EUROJACKPOT_port"], gr.State("EUROJACKPOT")], outputs=[md])
-
-def build_settings_tab():
-    with gr.Tab("Settings"):
-        gr.Markdown(textwrap.dedent("""
-        **Global notes**
-
-        - Offline by default; enable online fetching for fresh data.
-        - For heavy runs, use Preset: Max Run in each game tab.
-        - ML hook is experimental and off by default; it requires ample data (≥120 draws) and libraries (lightgbm, scikit-learn, xgboost, prophet).
-        - Prophet (time-series model) enhances ML predictions with temporal trends when `use_ml=True` and ≥120 draws with valid date columns are available.
-        - Adaptive constraints auto-set from history; override if you prefer stricter/looser filters.
-        - Ensure history files are clean (deduped, correct ranges).
-
-        **Tips**
-
-        - Increase iterations and top-k for more stable candidate pools.
-        - Use DPP (with coverage boost) to diversify better than greedy.
-        - Wheels can enforce coverage of your key numbers.
-        - Download CSV/PNG outputs from `/content/exports/<game>/` in Colab, as files are temporary.
-        """))
-
-if __name__ == "__main__":
-    with gr.Blocks(title="Ultra Lottery Helper") as demo:
-        states: Dict[str, gr.State] = {}
-        for game in ["TZOKER", "LOTTO", "EUROJACKPOT"]:
-            s_hist, s_port, s_log, s_beta, s_gamma = make_game_tab(game)
-            states[game] = s_hist                 # history state (for reference)
-            states[f"{game}_port"] = s_port       # used by Export tab
-            states[f"{game}_log"] = s_log
-            states[f"{game}_beta"] = s_beta
-            states[f"{game}_gamma"] = s_gamma
-
-        build_history_tab()
-        build_export_tab(states)
-        build_settings_tab()
-    demo.launch(share=_in_colab(), quiet=True)
