@@ -1,24 +1,96 @@
 name: CI
+
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+
 jobs:
   test-linux:
     runs-on: ubuntu-latest
+    env:
+      QT_QPA_PLATFORM: offscreen   # avoid Qt display errors
+      MPLBACKEND: Agg              # headless matplotlib
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
           cache: "pip"
+
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-      - name: Smoke import
+
+      - name: Smoke-compile core
         run: |
           if [ -f src/ultra_lottery_helper.py ]; then python -m py_compile src/ultra_lottery_helper.py; fi
+
+      - name: Import test (core API)
+        run: |
+          python - << 'PY'
+          import os, pandas as pd
+          from src.ultra_lottery_helper import GAMES, Config, _load_all_history
+          # Just touch TZOKER loading path; no files required
+          print("Games:", list(GAMES.keys()))
+          cfg = Config()
+          print("Config iterations:", cfg.iterations)
+          # Skip actual I/O if data missing
+          d, log = _load_all_history("TZOKER", use_online=False)
+          print("Load log (ok if empty/missing):", log[:120] if isinstance(log, str) else log)
+          print("CI core import OK")
+          PY
+
+      - name: Import test (desktop UI, offscreen)
+        run: |
+          python - << 'PY'
+          import os
+          os.environ["QT_QPA_PLATFORM"] = "offscreen"
+          try:
+            import src.ulh_desktop as app
+            print("PySide6 desktop module imported:", app.__name__)
+          except Exception as e:
+            # Don't fail CI if PySide6 not present in minimal env;
+            # but it *should* be in requirements.txt so this should pass.
+            raise
+          PY
+
+  # Optional: quick Windows compile check (no packaging)
+  test-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "pip"
+
+      - name: Install deps
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          if (Test-Path requirements.txt) { pip install -r requirements.txt }
+
+      - name: Smoke-compile core
+        shell: pwsh
+        run: |
+          if (Test-Path src\ultra_lottery_helper.py) { python -m py_compile src\ultra_lottery_helper.py }
+
+      - name: Import test (desktop UI)
+        shell: pwsh
+        run: |
+          $env:QT_QPA_PLATFORM = "offscreen"
+          python - << 'PY'
+          import os
+          os.environ["QT_QPA_PLATFORM"] = "offscreen"
+          import src.ulh_desktop as app
+          print("Desktop module:", app.__name__)
+          PY
