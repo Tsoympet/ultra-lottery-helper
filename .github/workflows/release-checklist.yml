@@ -1,0 +1,115 @@
+name: Release Checklist
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [prereleased, released]
+
+permissions:
+  contents: read
+
+jobs:
+  checklist:
+    name: Validate release essentials
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run checks
+        id: checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          PASS=true
+
+          echo "## Release Checklist" >> $GITHUB_STEP_SUMMARY
+
+          check_file () {
+            local f="$1"
+            local label="$2"
+            if [ -f "$f" ]; then
+              echo "✅ $label — found ($f)" | tee -a checklist.log
+              echo "- ✅ $label" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "❌ $label — MISSING ($f)" | tee -a checklist.log
+              echo "- ❌ $label — **missing**" >> $GITHUB_STEP_SUMMARY
+              PASS=false
+            fi
+          }
+
+          check_dir () {
+            local d="$1"
+            local label="$2"
+            if [ -d "$d" ]; then
+              echo "✅ $label — dir exists ($d)" | tee -a checklist.log
+              echo "- ✅ $label — dir exists" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "❌ $label — DIR MISSING ($d)" | tee -a checklist.log
+              echo "- ❌ $label — **dir missing**" >> $GITHUB_STEP_SUMMARY
+              PASS=false
+            fi
+          }
+
+          # Required files
+          check_file "assets/icon.ico" "App icon"
+          check_file "LICENSE.txt" "License"
+          check_file "README.md" "README (English)"
+          check_file "README.el.md" "README (Greek)"
+          check_file "ultra_lottery_helper.iss" "Inno Setup script"
+          check_file "src/ulh_desktop.py" "Desktop entry (PySide6)"
+
+          # Required directories
+          check_dir "data/history" "History root"
+          check_dir "data/history/tzoker" "TZOKER history dir"
+          check_dir "data/history/lotto" "LOTTO history dir"
+          check_dir "data/history/eurojackpot" "EUROJACKPOT history dir"
+          check_dir "assets" "Assets dir"
+
+          # Optional: warn if history dirs are empty (don't fail)
+          warn_empty () {
+            local d="$1"
+            local label="$2"
+            if [ -d "$d" ]; then
+              if compgen -G "$d/*" > /dev/null; then
+                echo "ℹ️  $label — has files" | tee -a checklist.log
+                echo "  - $label: contains files" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "⚠️  $label — empty directory ($d)" | tee -a checklist.log
+                echo "  - ⚠️ $label: **empty** — upload data before release" >> $GITHUB_STEP_SUMMARY
+              fi
+            fi
+          }
+
+          warn_empty "data/history/tzoker" "TZOKER history"
+          warn_empty "data/history/lotto" "LOTTO history"
+          warn_empty "data/history/eurojackpot" "EUROJACKPOT history"
+
+          # Optional: quick sanity on requirements (PySide6 should be present)
+          if [ -f requirements.txt ]; then
+            if grep -qi '^pyside6' requirements.txt; then
+              echo "✅ requirements.txt includes PySide6" | tee -a checklist.log
+              echo "- ✅ requirements includes PySide6" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "⚠️ requirements.txt does not list PySide6 (desktop run may fail if not bundled)" | tee -a checklist.log
+              echo "- ⚠️ PySide6 not found in requirements (ok if vendored by PyInstaller)" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "⚠️ requirements.txt not found (ok if not needed)" | tee -a checklist.log
+            echo "- ⚠️ requirements.txt missing (optional)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "> This job fails the workflow if any **required** item is missing." >> $GITHUB_STEP_SUMMARY
+
+          $PASS || { echo "Required items missing. Failing checklist."; exit 1; }
+
+      - name: Upload checklist log (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-checklist-log
+          path: checklist.log
