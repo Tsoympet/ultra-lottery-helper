@@ -3,7 +3,7 @@
 """
 Ultra Lottery Helper — Native Desktop UI (PySide6)
 - Local offline app
-- Uses ultra_lottery_helper.py (core)
+- Uses ultra_lottery_helper.py (core) from the same folder (src)
 - Tabs per game: TZOKER, LOTTO, EUROJACKPOT
 - Portfolio prediction, plots, exports
 """
@@ -11,33 +11,65 @@ Ultra Lottery Helper — Native Desktop UI (PySide6)
 import os
 import sys
 import traceback
-import pandas as pd
+import runpy
+import pathlib
 
-from PySide6.QtCore import Qt, QSize, Slot
-from PySide6.QtGui import QAction, QIcon
-from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QTabWidget, QVBoxLayout, QHBoxLayout,
-    QPushButton, QLabel, QCheckBox, QSpinBox, QDoubleSpinBox, QLineEdit,
-    QGridLayout, QMessageBox, QGroupBox, QComboBox, QTableWidget,
-    QTableWidgetItem, QHeaderView
-)
+# ---------------- Robust core import ----------------
+HERE = pathlib.Path(__file__).resolve().parent  # .../src
+
+# Ensure src is on sys.path (NOT the project root)
+if str(HERE) not in sys.path:
+    sys.path.insert(0, str(HERE))
+
+try:
+    import ultra_lottery_helper as ulh
+except ModuleNotFoundError:
+    # Fallback: load module by path (dev + some PyInstaller layouts)
+    core_path = HERE / "ultra_lottery_helper.py"
+    if core_path.exists():
+        mod_dict = runpy.run_path(str(core_path))
+        class _NS: pass
+        ulh = _NS()
+        for k, v in mod_dict.items():
+            setattr(ulh, k, v)
+    else:
+        raise
+
+# ---------------- Qt / Matplotlib imports ----------------
+try:
+    from PySide6.QtCore import Qt, QSize, Slot
+    from PySide6.QtGui import QAction, QIcon
+    from PySide6.QtWidgets import (
+        QApplication, QMainWindow, QWidget, QTabWidget, QVBoxLayout, QHBoxLayout,
+        QPushButton, QLabel, QCheckBox, QSpinBox, QGroupBox, QGridLayout,
+        QMessageBox, QTableWidget, QTableWidgetItem, QHeaderView
+    )
+except Exception as e:
+    print("PySide6 is required to run the desktop UI. Please install with:")
+    print("  pip install PySide6 matplotlib")
+    raise
 
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
+import pandas as pd
 
-# --- core import ---
-THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.abspath(os.path.join(THIS_DIR, os.pardir))
-if ROOT not in sys.path:
-    sys.path.insert(0, ROOT)
-
-from ultra_lottery_helper import (
-    GAMES, Config, _load_all_history, build_probs, generate_candidates,
-    dpp_select, monte_carlo_risk, apply_ev_rerank,
-    export_six_to_csv, export_six_to_png,
-    plot_frequency, plot_recency, plot_last_digit,
-    plot_pairs_heatmap, plot_odd_even,
-    _quick_df_sig, OPAP_TICKET_PRICE_DEFAULTS
-)
+# Bring names from core (ulh namespace)
+GAMES = ulh.GAMES
+Config = ulh.Config
+_load_all_history = ulh._load_all_history
+build_probs = ulh.build_probs
+generate_candidates = ulh.generate_candidates
+dpp_select = ulh.dpp_select
+monte_carlo_risk = ulh.monte_carlo_risk
+apply_ev_rerank = ulh.apply_ev_rerank
+export_six_to_csv = ulh.export_six_to_csv
+export_six_to_png = ulh.export_six_to_png
+plot_frequency = ulh.plot_frequency
+plot_recency = ulh.plot_recency
+plot_last_digit = ulh.plot_last_digit
+plot_pairs_heatmap = ulh.plot_pairs_heatmap
+plot_odd_even = ulh.plot_odd_even
+_quick_df_sig = ulh._quick_df_sig
+OPAP_TICKET_PRICE_DEFAULTS = ulh.OPAP_TICKET_PRICE_DEFAULTS
 
 # ---------------- Helpers ----------------
 
@@ -242,8 +274,9 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Ultra Lottery Helper — Desktop")
         self.setMinimumSize(QSize(1000,700))
-        icon_path=os.path.join(ROOT,"assets","icon.ico")
-        if os.path.exists(icon_path): self.setWindowIcon(QIcon(icon_path))
+        icon_path = HERE.parent / "assets" / "icon.ico"
+        if icon_path.exists():
+            self.setWindowIcon(QIcon(str(icon_path)))
 
         tabs=QTabWidget()
         tabs.addTab(GameTab("TZOKER"),"TZOKER")
