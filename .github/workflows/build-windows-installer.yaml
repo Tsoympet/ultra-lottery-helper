@@ -6,15 +6,26 @@ on:
     types: [published]
 
 permissions:
-  contents: write   # χρειάζεται για να ανεβάσουμε assets στο Release
+  contents: write   # για να ανεβάσουμε assets στο Release
 
 jobs:
   build-windows:
     runs-on: windows-latest
+    env:
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+      PYTHONUNBUFFERED: "1"
+      PYTHONOPTIMIZE: "1"
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Verify required files exist
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "src/ulh_desktop.py")) { throw "Missing src/ulh_desktop.py" }
+          if (-not (Test-Path "ultra_lottery_helper.iss")) { throw "Missing ultra_lottery_helper.iss" }
+          if (-not (Test-Path "assets")) { Write-Host "assets/ not found (continuing)."; }
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -40,11 +51,11 @@ jobs:
         run: |
           $iconFlag = ""
           if (Test-Path "assets\icon.ico") { $iconFlag = "--icon=assets\icon.ico" }
-          # Bundle assets folder so το icon (και μελλοντικά assets) είναι μέσα στο exe dir
           pyinstaller --onefile --noconsole $iconFlag `
             --name ultra_lottery_helper `
             --add-data "assets;assets" `
             src\ulh_desktop.py
+          if (-not (Test-Path "dist\ultra_lottery_helper.exe")) { throw "PyInstaller output missing" }
 
       - name: Install Inno Setup (via Chocolatey)
         shell: pwsh
@@ -69,22 +80,18 @@ jobs:
           if (!(Test-Path $iscc)) { $iscc = "${env:ProgramFiles}\Inno Setup 6\ISCC.exe" }
           if (!(Test-Path $iscc)) { throw "ISCC.exe not found. Is Inno Setup installed?" }
           & "$iscc" ultra_lottery_helper.iss
+          $inst = Get-ChildItem -Path "dist_installer" -Filter "UltraLotteryHelperInstaller_*.exe" | Select-Object -First 1
+          if ($null -eq $inst) { throw "Installer not produced under dist_installer" }
 
       - name: Compute SHA256 checksums
         shell: pwsh
         run: |
           $exe = "dist\ultra_lottery_helper.exe"
           $inst = Get-ChildItem -Path "dist_installer" -Filter "UltraLotteryHelperInstaller_*.exe" | Select-Object -First 1
-          if (!(Test-Path $exe)) { throw "Portable exe not found at dist\ultra_lottery_helper.exe" }
-          if ($null -eq $inst) { throw "Installer exe not found in dist_installer" }
-
           $exeHash  = (Get-FileHash -Path $exe -Algorithm SHA256).Hash
           $instHash = (Get-FileHash -Path $inst.FullName -Algorithm SHA256).Hash
-
           "SHA256 (portable exe): $exeHash"  | Out-File -FilePath sha256.txt -Encoding ascii
           "SHA256 (installer):     $instHash" | Out-File -FilePath sha256.txt -Append -Encoding ascii
-
-          Write-Host "== SHA256 =="
           Get-Content sha256.txt
 
       - name: Upload artifacts (installer, exe, checksums)
@@ -106,3 +113,13 @@ jobs:
             sha256.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload PyInstaller logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: |
+            ./*.log
+            build/**
+            dist/**
