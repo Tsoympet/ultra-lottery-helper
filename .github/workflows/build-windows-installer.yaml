@@ -80,14 +80,14 @@ jobs:
           if (!(Test-Path $iscc)) { $iscc = "${env:ProgramFiles}\Inno Setup 6\ISCC.exe" }
           if (!(Test-Path $iscc)) { throw "ISCC.exe not found. Is Inno Setup installed?" }
           & "$iscc" ultra_lottery_helper.iss
-          $inst = Get-ChildItem -Path "dist_installer" -Filter "UltraLotteryHelperInstaller_*.exe" | Select-Object -First 1
+          $inst = Get-ChildItem -Path "dist_installer" -Filter "OracleLotteryPredictorInstaller_*.exe" | Select-Object -First 1
           if ($null -eq $inst) { throw "Installer not produced under dist_installer" }
 
       - name: Compute SHA256 checksums
         shell: pwsh
         run: |
           $exe = "dist\ultra_lottery_helper.exe"
-          $inst = Get-ChildItem -Path "dist_installer" -Filter "UltraLotteryHelperInstaller_*.exe" | Select-Object -First 1
+          $inst = Get-ChildItem -Path "dist_installer" -Filter "OracleLotteryPredictorInstaller_*.exe" | Select-Object -First 1
           $exeHash  = (Get-FileHash -Path $exe -Algorithm SHA256).Hash
           $instHash = (Get-FileHash -Path $inst.FullName -Algorithm SHA256).Hash
           "SHA256 (portable exe): $exeHash"  | Out-File -FilePath sha256.txt -Encoding ascii
@@ -97,10 +97,10 @@ jobs:
       - name: Upload artifacts (installer, exe, checksums)
         uses: actions/upload-artifact@v4
         with:
-          name: UltraLotteryHelper_build
+          name: OracleLotteryPredictor_build
           path: |
             dist\ultra_lottery_helper.exe
-            dist_installer\UltraLotteryHelperInstaller_*.exe
+            dist_installer\OracleLotteryPredictorInstaller_*.exe
             sha256.txt
 
       - name: Attach assets to the GitHub Release
@@ -109,7 +109,7 @@ jobs:
         with:
           files: |
             dist/ultra_lottery_helper.exe
-            dist_installer/UltraLotteryHelperInstaller_*.exe
+            dist_installer/OracleLotteryPredictorInstaller_*.exe
             sha256.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
