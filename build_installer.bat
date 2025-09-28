@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-echo === Ultra Lottery Helper - Local Build Script (Native Desktop) ===
+echo === Oracle Lottery Predictor - Local Build Script (Native Desktop) ===
 
 REM Clean previous builds
 if exist build rmdir /s /q build
@@ -61,7 +61,7 @@ if errorlevel 1 (
 
 echo === Build finished successfully! ===
 echo Portable EXE: dist\ultra_lottery_helper.exe
-echo Installer:    dist_installer\UltraLotteryHelperInstaller_*.exe
+echo Installer:    dist_installer\OracleLotteryPredictorInstaller_*.exe
 
 endlocal
 pause

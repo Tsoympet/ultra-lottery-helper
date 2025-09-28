@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Ultra Lottery Helper — Native Desktop UI (PySide6)
+Oracle Lottery Predictor — Native Desktop UI (PySide6)
 - Local offline app
 - Uses ultra_lottery_helper.py (core) from the same folder (src)
 - Tabs per game: TZOKER, LOTTO, EUROJACKPOT
@@ -36,10 +36,13 @@ except ModuleNotFoundError:
         raise
 
 # ---------------- Qt / Matplotlib imports ----------------
+from ulh_learning import record_outcome, learn_after_draw, get_status_summary
+
 try:
     from PySide6.QtCore import Qt, QSize, Slot
     from PySide6.QtGui import QAction, QIcon
     from PySide6.QtWidgets import (
+        QInputDialog, QMessageBox,
         QApplication, QMainWindow, QWidget, QTabWidget, QVBoxLayout, QHBoxLayout,
         QPushButton, QLabel, QCheckBox, QSpinBox, QGroupBox, QGridLayout,
         QMessageBox, QTableWidget, QTableWidgetItem, QHeaderView
@@ -74,10 +77,10 @@ OPAP_TICKET_PRICE_DEFAULTS = ulh.OPAP_TICKET_PRICE_DEFAULTS
 # ---------------- Helpers ----------------
 
 def error_box(msg: str, parent=None):
-    QMessageBox.critical(parent, "Ultra Lottery Helper — Error", msg)
+    QMessageBox.critical(parent, "Oracle Lottery Predictor — Error", msg)
 
 def info_box(msg: str, parent=None):
-    QMessageBox.information(parent, "Ultra Lottery Helper", msg)
+    QMessageBox.information(parent, "Oracle Lottery Predictor", msg)
 
 # ---------------- Plot Widget ----------------
 
@@ -106,6 +109,7 @@ class GameTab(QWidget):
         self.history_df = pd.DataFrame()
         self.portfolio_df = pd.DataFrame()
         self.plot_cache = {}
+        self._last_hr = None
         self._build_ui()
 
     def _build_ui(self):
@@ -133,6 +137,9 @@ class GameTab(QWidget):
         row2.addWidget(self.btn_predict); row2.addStretch(1)
         row2.addWidget(self.btn_export_csv); row2.addWidget(self.btn_export_png)
         root.addLayout(row2)
+        self.lbl_status = QLabel("Status: —")
+        root.addWidget(self.lbl_status)
+
 
         # table
         self.tbl = QTableWidget(0, 0)
@@ -176,7 +183,9 @@ class GameTab(QWidget):
         grid.addWidget(self.spn_seed,0,5)
         return g
 
-    def _collect_cfg(self) -> Config:
+            self._update_status()
+
+def _collect_cfg(self) -> Config:
         return Config(
             iterations=self.spn_iter.value(),
             topk=self.spn_topk.value(),
@@ -186,7 +195,62 @@ class GameTab(QWidget):
         )
 
     # --- slots
-    @Slot()
+    
+    def _update_status(self):
+        try:
+            st = get_status_summary()
+            state = st.get("state", {}) or {}
+            report = st.get("report", {}) or {}
+
+            # Extract metrics
+            hr = report.get("any_hit_rate", None)
+            top1 = report.get("top1_main_hits", None)
+            combos = report.get("combos_evaluated", None)
+            half_life = state.get("half_life", None)
+            ens = state.get("ensemble", {}) or {}
+
+            # Formatters
+            def fmt_pct(x):
+                return f"{x*100:.2f}%" if x is not None else "—"
+            def fmt_num(x):
+                return "—" if x is None else str(x)
+            def fmt_w(x):
+                try:
+                    return f"{float(x):.2f}"
+                except Exception:
+                    return "—"
+
+            # Decide color by improvement vs previous hr
+            color = "#666666"  # neutral
+            arrow = ""
+            if isinstance(hr, (int, float)):
+                if self._last_hr is not None:
+                    if hr > self._last_hr + 1e-12:
+                        color = "#2e7d32"  # green
+                        arrow = " ▲"
+                    elif hr < self._last_hr - 1e-12:
+                        color = "#c62828"  # red
+                        arrow = " ▼"
+                # update memory
+                self._last_hr = hr
+
+            # Build rich text
+            hr_txt = fmt_pct(hr)
+            ew = fmt_w(ens.get("ewma"))
+            rc = fmt_w(ens.get("recency"))
+            ml = fmt_w(ens.get("ml"))
+            txt = (
+                f"<b>Last learn:</b> "
+                f"<span style='color:{color}'>hit_rate={hr_txt}{arrow}</span> | "
+                f"top1_hits={fmt_num(top1)} | combos={fmt_num(combos)} | "
+                f"half_life={fmt_num(half_life)} | "
+                f"weights={{ewma:{ew}, recency:{rc}, ml:{ml}}}"
+            )
+            self.lbl_status.setText(txt)
+            self.lbl_status.setToolTip(f"State/Report JSON available in data/learning/last_report.json")
+        except Exception:
+            self.lbl_status.setText("Status: —")
+@Slot()
     def on_reload(self):
         try:
             use_online = self.chk_online.isChecked()
@@ -223,6 +287,15 @@ class GameTab(QWidget):
                 elif self.spec.sec_pick==2: row+=list(s)
                 rows.append(row)
             self.portfolio_df=pd.DataFrame(rows,columns=headers)
+            self._update_status()
+            # --- Auto-record generated portfolio for learning ---
+            try:
+                combos = [list(map(int, row[:self.spec.main_pick])) for row in rows]
+                if combos:
+                    record_portfolio(self.game_key, combos, tag="auto_ui")
+            except Exception as _e:
+                pass
+    
             self._refresh_table()
 
             self.lbl_warn.setText(warning or "")
@@ -244,6 +317,7 @@ class GameTab(QWidget):
             self.plt4.set_figure(f4); self.plt5.set_figure(f5)
         except Exception as e:
             error_box(f"Predict failed:\n{e}\n{traceback.format_exc()}", self)
+        self._update_status()
 
     @Slot()
     def on_export_csv(self):
@@ -269,10 +343,46 @@ class GameTab(QWidget):
 
 # ---------------- Main Window ----------------
 
+
+    def _on_record_outcome(self):
+        try:
+            # Ask for main numbers
+            ok1, main_text = True, ""
+            main_text, ok1 = QInputDialog.getText(self, "Record Outcome", f"Enter {self.spec.main_pick} main numbers (space/comma separated):")
+            if not ok1 or not main_text.strip():
+                return
+            # Ask for secondary numbers (optional)
+            sec_text, ok2 = QInputDialog.getText(self, "Record Outcome", f"Enter {self.spec.sec_pick} secondary numbers (optional):")
+            # Parse
+            def parse_nums(s):
+                return [int(x) for x in str(s).replace(",", " ").split() if str(x).strip().isdigit()]
+            main = parse_nums(main_text)
+            sec = parse_nums(sec_text) if ok2 and sec_text.strip() else None
+            if len(main) != self.spec.main_pick:
+                QMessageBox.warning(self, "Invalid input", f"You must enter exactly {self.spec.main_pick} main numbers.")
+                return
+            record_outcome(self.game_key, main=main, sec=sec)
+            QMessageBox.information(self, "Recorded", "Outcome saved locally.")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to record outcome:\\n{e}")
+
+    def _on_learn_now(self):
+        try:
+            # Ask for Top-K limit (optional)
+            k_text, ok = QInputDialog.getText(self, "Learn Now", "Evaluate top-K latest combos (optional):")
+            k_limit = int(k_text) if ok and k_text.strip().isdigit() else None
+            out = learn_after_draw(self.game_key, k_limit=k_limit, self_replay_rounds=1)
+            # Pretty-print summary
+            import json as _json
+            msg = _json.dumps(out, indent=2)
+            QMessageBox.information(self, "Learning Report", msg)
+            self._update_status()
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Learning failed:\\n{e}")
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Ultra Lottery Helper — Desktop")
+        self.setWindowTitle("Oracle Lottery Predictor — Desktop")
         self.setMinimumSize(QSize(1000,700))
         icon_path = HERE.parent / "assets" / "icon.ico"
         if icon_path.exists():
@@ -291,7 +401,7 @@ class MainWindow(QMainWindow):
         m_help.addAction(act_about)
 
     def _about(self):
-        info_box("Ultra Lottery Helper — Native Desktop UI\nOffline, local.\nData stays on your PC.",self)
+        info_box("Oracle Lottery Predictor — Native Desktop UI\nOffline, local.\nData stays on your PC.",self)
 
 # ---------------- Entry ----------------
 

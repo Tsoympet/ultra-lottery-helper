@@ -1,0 +1,10 @@
+{
+  "luck_beta": 0.1,
+  "unluck_gamma": 0.05,
+  "half_life": 180,
+  "ensemble": {
+    "ewma": 0.3,
+    "recency": 0.2,
+    "ml": 0.5
+  }
+}

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Ultra Lottery Helper — Offline Suite (v6.3.0, Native-Core)
+Oracle Lottery Predictor — Offline Suite (v6.3.0, Native-Core)
 - Offline by default; optional online history fetching
 - History auto-merge per game (CSV/XLS/XLSX) from data/history/<game>/
 - EWMA + BMA + Luck/Unluck (adaptive) + ML ensemble (Prophet, LightGBM, RF, XGBoost, SVM)

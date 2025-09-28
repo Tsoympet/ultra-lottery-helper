@@ -1,4 +1,4 @@
-# Ultra Lottery Helper — Offline Suite (v6.3.0)
+# Oracle Lottery Predictor — Offline Suite (v6.3.0)
 
 Offline-first εργαλείο ανάλυσης ιστορικού λαχείων (TZOKER, LOTTO, EUROJACKPOT) με:
 - EWMA + BMA + προσαρμοστικά Luck/Unluck

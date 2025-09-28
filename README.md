@@ -1,4 +1,4 @@
-# Ultra Lottery Helper
+# Oracle Lottery Predictor
 [English](README.md) | [Ξ•Ξ»Ξ»Ξ·Ξ½ΞΉΞΊΞ¬](README.el.md)
 
 [![CI](https://img.shields.io/badge/CI-passing-brightgreen)](#)
@@ -6,7 +6,7 @@
 [![Python](https://img.shields.io/badge/Python-3.10+-blue)](#)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](#)
 
-**Ultra Lottery Helper** β€” offline-first analysis & column generation for **TZOKER / LOTTO / EuroJackpot**.  
+**Oracle Lottery Predictor** β€” offline-first analysis & column generation for **TZOKER / LOTTO / EuroJackpot**.  
 Blend of **EWMA/BMA**, adaptive **luck/unluck**, **constraints**, **Gumbel Top-k** sampling, **DPP** portfolio selection, **Monte Carlo** risk, and optional **ML** (Prophet, LightGBM, RF, XGBoost, SVM).  
 Now ships as a **native desktop app (PySide6)** β€” no browser, no local server.
 
@@ -28,9 +28,9 @@ Now ships as a **native desktop app (PySide6)** β€” no browser, no local se
 
 ## Quick Start
 ### Windows (Installer)
-1. Download `UltraLotteryHelperInstaller_X.Y.Z.exe` from **Releases**.
+1. Download `OracleLotteryPredictorInstaller_X.Y.Z.exe` from **Releases**.
 2. Run installer β†’ Start Menu/Desktop shortcuts are created; app data folders (`data/history/*`, `exports/*`) are set up.
-3. Launch **Ultra Lottery Helper (Desktop)** from Start Menu or Desktop. (No browser needed.)
+3. Launch **Oracle Lottery Predictor (Desktop)** from Start Menu or Desktop. (No browser needed.)
 
 ### Portable
 - Download `ultra_lottery_helper.exe`, optionally place a `data/` folder next to it, then double-click to run.
@@ -61,7 +61,7 @@ build_installer.bat
 ```
 Produces:
 - `dist\ultra_lottery_helper.exe` (portable)
-- `dist_installer\UltraLotteryHelperInstaller_*.exe`
+- `dist_installer\OracleLotteryPredictorInstaller_*.exe`
 
 ## CI/CD
 - `.github/workflows/ci.yml` β€” CI on Linux: installs deps, headless-safe imports (Qt offscreen), optional pytest

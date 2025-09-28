@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [v1.0.0] - 2025-09-07
 ### Added
-- First public release of **Ultra Lottery Helper**.
+- First public release of **Oracle Lottery Predictor**.
 - Support for **TZOKER, LOTTO, EuroJackpot**.
 - Unified **Gradio** UI.
 - History loading from local files or optional online fetch.

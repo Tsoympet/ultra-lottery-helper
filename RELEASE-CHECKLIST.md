@@ -1,4 +1,4 @@
-# Ultra Lottery Helper — Release Checklist
+# Oracle Lottery Predictor — Release Checklist
 
 ## Pre-Build
 - [ ] Update `CHANGELOG.md` with latest features/fixes
@@ -18,7 +18,7 @@
 ## Build
 - [ ] Run `build_installer.bat` locally (Windows)
 - [ ] Verify `dist/ultra_lottery_helper.exe` runs correctly
-- [ ] Verify `dist_installer/UltraLotteryHelperInstaller_vX.Y.Z.exe` installs and uninstalls cleanly
+- [ ] Verify `dist_installer/OracleLotteryPredictorInstaller_vX.Y.Z.exe` installs and uninstalls cleanly
 
 ## Release
 - [ ] Push all changes to `main`

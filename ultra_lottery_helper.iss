@@ -5,22 +5,26 @@
 #endif
 
 [Setup]
+WizardSmallImageFile=assets\banner_small.bmp
+WizardImageFile=assets\banner.bmp
+SignTool=mysigner
+SignedUninstaller=yes
 AppId={{F23A50E3-89F7-4D71-9F91-ULH-DESKTOP}}
-AppName=Ultra Lottery Helper (Desktop)
-AppVersion={#MyAppVersion}
+AppName=Oracle Lottery Predictor
+AppVersion=6.3.0
 AppPublisher=Tsoympet
 AppPublisherURL=https://github.com/Tsoympet/ultra-lottery-helper
 AppSupportURL=https://github.com/Tsoympet/ultra-lottery-helper/issues
-DefaultDirName={autopf}\UltraLotteryHelper
-DefaultGroupName=Ultra Lottery Helper (Desktop)
+DefaultDirName={pf}\Oracle Lottery Predictor
+DefaultGroupName=Oracle Lottery Predictor (Desktop)
 UninstallDisplayIcon={app}\ultra_lottery_helper.exe
 SetupIconFile=assets\icon.ico
 OutputDir=dist_installer
-OutputBaseFilename=UltraLotteryHelperInstaller_{#MyAppVersion}
+OutputBaseFilename=OracleLotteryPredictor-Setup
 ArchitecturesInstallIn64BitMode=x64
 Compression=lzma2
 SolidCompression=yes
-LicenseFile=LICENSE.txt
+LicenseFile=EULA.rtf
 PrivilegesRequired=admin
 WizardStyle=modern
 
@@ -45,17 +49,23 @@ Name: "{app}\assets"
 
 [Icons]
 ; Start Menu
-Name: "{group}\Ultra Lottery Helper (Desktop)"; Filename: "{app}\ultra_lottery_helper.exe"; IconFilename: "{app}\assets\icon.ico"
+Name: "{group}\Oracle Lottery Predictor (Desktop)"; Filename: "{app}\ultra_lottery_helper.exe"; IconFilename: "{app}\assets\icon.ico"
 ; Desktop (προαιρετικό)
-Name: "{commondesktop}\Ultra Lottery Helper (Desktop)"; Filename: "{app}\ultra_lottery_helper.exe"; IconFilename: "{app}\assets\icon.ico"; Tasks: desktopicon
+Name: "{commondesktop}\Oracle Lottery Predictor (Desktop)"; Filename: "{app}\ultra_lottery_helper.exe"; IconFilename: "{app}\assets\icon.ico"; Tasks: desktopicon
 ; Quick Launch (παλιό αλλά διατηρείται)
-Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\Ultra Lottery Helper (Desktop)"; Filename: "{app}\ultra_lottery_helper.exe"; Tasks: quicklaunchicon
+Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\Oracle Lottery Predictor (Desktop)"; Filename: "{app}\ultra_lottery_helper.exe"; Tasks: quicklaunchicon
 ; Uninstall
-Name: "{group}\Uninstall Ultra Lottery Helper (Desktop)"; Filename: "{uninstallexe}"
+Name: "{group}\Uninstall Oracle Lottery Predictor (Desktop)"; Filename: "{uninstallexe}"
 
 [Tasks]
 Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription: "Additional icons:"; Flags: unchecked
 Name: "quicklaunchicon"; Description: "Create a Quick Launch shortcut"; GroupDescription: "Additional icons:"; Flags: unchecked
 
 [Run]
-Filename: "{app}\ultra_lottery_helper.exe"; Description: "Launch Ultra Lottery Helper (Desktop)"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\ultra_lottery_helper.exe"; Description: "Launch Oracle Lottery Predictor (Desktop)"; Flags: nowait postinstall skipifsilent
+
+[SignTools]
+Name: "mysigner"; Command: "signtool sign /fd SHA256 /a /tr http://timestamp.digicert.com /td sha256 $f"
+
+[Files]
+Source: "dist\OracleLotteryPredictor\*"; DestDir: "{app}"; Flags: recursesubdirs

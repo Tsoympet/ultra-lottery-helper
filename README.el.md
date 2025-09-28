@@ -1,4 +1,4 @@
-# Υπέρτατος Βοηθός Λαχείων (Ultra Lottery Helper)
+# Υπέρτατος Βοηθός Λαχείων (Oracle Lottery Predictor)
 [English](README.md) | [Ελληνικά](README.el.md)
 
 [![CI](https://img.shields.io/badge/CI-passing-brightgreen)](#)
@@ -31,9 +31,9 @@
 
 ## Quick Start
 ### Windows (Installer)
-1. Download `UltraLotteryHelperInstaller_X.Y.Z.exe` from **Releases**.
+1. Download `OracleLotteryPredictorInstaller_X.Y.Z.exe` from **Releases**.
 2. Run installer β†’ Start Menu/Desktop shortcuts are created; app data folders (`data/history/*`, `exports/*`) are set up.
-3. Launch **Ultra Lottery Helper (Desktop)** from Start Menu or Desktop. (No browser needed.)
+3. Launch **Oracle Lottery Predictor (Desktop)** from Start Menu or Desktop. (No browser needed.)
 
 ### Portable
 - Download `ultra_lottery_helper.exe`, optionally place a `data/` folder next to it, then double-click to run.
@@ -64,7 +64,7 @@ build_installer.bat
 ```
 Produces:
 - `dist\ultra_lottery_helper.exe` (portable)
-- `dist_installer\UltraLotteryHelperInstaller_*.exe`
+- `dist_installer\OracleLotteryPredictorInstaller_*.exe`
 
 ## CI/CD
 - `.github/workflows/ci.yml` β€” CI on Linux: installs deps, headless-safe imports (Qt offscreen), optional pytest
