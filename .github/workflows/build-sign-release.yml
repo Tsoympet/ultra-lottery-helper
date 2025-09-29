@@ -1,0 +1,162 @@
+name: Build, Sign & Release (Oracle Lottery Predictor)
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    name: Build (Windows, unsigned)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: PyInstaller build
+        shell: pwsh
+        run: |
+          cd scripts
+          # Build only (no signing/installer here)
+          pyinstaller ..\src\ulh_desktop.py `
+            --name "OracleLotteryPredictor" `
+            --noconsole `
+            --icon ..\assets\icon.ico `
+            --add-data "..\src;src" `
+            --add-data "..\assets;assets" `
+            --add-data "..\data;data"
+
+      - name: Upload unsigned dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-dist
+          path: dist/OracleLotteryPredictor/**
+
+  sign-and-installer:
+    name: Sign Binaries & Build Installer (self-hosted)
+    needs: build-windows
+    # A self-hosted Windows runner with SignTool + Inno Setup + your certificate installed
+    runs-on: [self-hosted, windows, ev-token]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download unsigned dist
+        uses: actions/download-artifact@v4
+        with:
+          name: unsigned-dist
+          path: dist/OracleLotteryPredictor
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Sign + Build Installer
+        shell: pwsh
+        env:
+          CERT_THUMBPRINT: ${{ secrets.CERT_THUMBPRINT }}
+          TIMESTAMP_URL: ${{ secrets.TIMESTAMP_URL }}
+        run: |
+          $thumb = $Env:CERT_THUMBPRINT
+          if (-not $thumb) { $thumb = "" }
+          $ts = $Env:TIMESTAMP_URL
+          if (-not $ts) { $ts = "http://timestamp.digicert.com" }
+
+          cd scripts
+          # Bump AppVersion from tag
+          .\detect_version.ps1 -Tag "${{ github.ref_name }}"
+          $ver = Get-Content version_detected.txt -Raw
+          .\bump_version.ps1 -Tag "${{ github.ref_name }}" -Version "$ver"
+          .\bump_installer_name.ps1 -Tag "${{ github.ref_name }}" -BuildNumber "${{ github.run_number }}"
+          # Build again to ensure paths; then sign & build installer
+          .\build_and_sign.ps1 -CertThumbprint "$thumb" -TimestampUrl "$ts"
+
+
+- name: Upload signing log
+  uses: actions/upload-artifact@v4
+  with:
+    name: signing-log
+    path: signing-log.txt
+
+- name: Optional VirusTotal upload (installer)
+  if: ${{ secrets.VIRUSTOTAL_API_KEY != '' }}
+  shell: pwsh
+  env:
+    VT_API_KEY: ${{ secrets.VIRUSTOTAL_API_KEY }}
+  run: |
+    $installer = Get-ChildItem .\Output -Filter *.exe | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+    if (-not $installer) { throw "Installer not found for VirusTotal" }
+    $filePath = $installer.FullName
+    Write-Host "Uploading to VirusTotal: $filePath"
+    $resp = curl.exe -s -X POST "https://www.virustotal.com/api/v3/files" -H "x-apikey: $Env:VT_API_KEY" -F "file=@`"$filePath`""
+    $resp | Out-File -FilePath vt-upload-response.json -Encoding utf8
+    Write-Host "VirusTotal response saved to vt-upload-response.json"
+- name: Upload VirusTotal response
+  if: ${{ secrets.VIRUSTOTAL_API_KEY != '' }}
+  uses: actions/upload-artifact@v4
+  with:
+    name: virustotal-response
+    path: vt-upload-response.json
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer
+          path: Output/*.exe
+
+  release:
+    name: Create GitHub Release
+    needs: [build-windows, sign-and-installer]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Read CHANGELOG
+        run: |
+          echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+          Get-Content CHANGELOG.md -Raw >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        id: changelog
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          echo "release_body=Automated build of Oracle Lottery Predictor. Includes signed installer and unsigned dist." >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Oracle Lottery Predictor ${{ github.ref_name }}
+          body: ${{ steps.notes.outputs.release_body }}
+
+**Changelog:**
+${{ steps.changelog.outputs.CHANGELOG }}
+          draft: false
+          prerelease: false
+          files: |
+            artifacts/installer/*.exe
+            artifacts/unsigned-dist/**/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
