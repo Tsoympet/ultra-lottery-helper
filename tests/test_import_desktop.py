@@ -16,5 +16,4 @@ def test_import_ulh_desktop_offscreen():
     """
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     sys.path.append("src")
-
     import ulh_desktop  # noqa: F401
