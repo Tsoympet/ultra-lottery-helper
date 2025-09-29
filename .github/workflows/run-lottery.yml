@@ -37,16 +37,13 @@ jobs:
           try:
               importlib.import_module("PySide6")
           except Exception:
-              subprocess.check_call([sys.executable, "-m", "pip", "install", "PySide6"])
+              subprocess.check_call([sys.executable, "-m", "pip", "install", "PySide6"))
           PY
 
       - name: Install Qt/GL runtime libs (headless)
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            libegl1 libgl1 libopengl0 libglx0 \
-            libxkbcommon-x11-0 libxcb-xinerama0 libxcb1 libx11-xcb1 libx11-6 \
-            libdbus-1-3 libxi6 libxcursor1
+          sudo apt-get install -y             libegl1 libgl1 libopengl0 libglx0             libxkbcommon-x11-0 libxcb-xinerama0 libxcb1 libx11-xcb1 libx11-6             libdbus-1-3 libxi6 libxcursor1
 
       - name: Byte-compile sources
         shell: bash
@@ -74,7 +71,7 @@ jobs:
           print("Loaded:", U.__file__)
           PY
 
-      - name: Run pytest (includes tests/test_import.py)
+      - name: Run pytest (includes tests/test_import*.py)
         env:
           QT_QPA_PLATFORM: offscreen
         run: |
@@ -131,7 +128,7 @@ PY
         run: |
           python -c "import os,sys; os.environ.setdefault('QT_QPA_PLATFORM','offscreen'); import PySide6.QtWidgets as qw; print('Qt import OK:', qw); sys.path.append('src'); import ulh_desktop as U; print('Loaded:', U.__file__)"
 
-      - name: Run pytest (includes tests/test_import.py)
+      - name: Run pytest (includes tests/test_import*.py)
         shell: pwsh
         env:
           QT_QPA_PLATFORM: offscreen
@@ -150,7 +147,6 @@ PY
           # Adjust if some wheel combos are unavailable/buggy for your repo
           - macos-image: 'macos-13'
             python-version: '3.12'
-          # Example additional exclusion:
           # - macos-image: 'macos-14'
           #   python-version: '3.9'
     steps:
@@ -199,7 +195,7 @@ PY
           print("Loaded:", U.__file__)
           PY
 
-      - name: Run pytest (includes tests/test_import.py)
+      - name: Run pytest (includes tests/test_import*.py)
         env:
           QT_QPA_PLATFORM: offscreen
         run: |
