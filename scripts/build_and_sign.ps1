@@ -25,6 +25,7 @@ if (-not (Test-Path $dist)) {
 }
 
 Write-Host "=== Signing PyInstaller binaries ===" -ForegroundColor Cyan
+$log = Join-Path (Resolve-Path "..") "signing-log.txt"
 $files = Get-ChildItem $dist -Recurse -Include *.exe,*.dll
 
 foreach ($f in $files) {
@@ -35,11 +36,11 @@ foreach ($f in $files) {
         $cmd += @("/sha1", $CertThumbprint)
     }
     $cmd += @("/tr", $TimestampUrl, "/td", "sha256", $f.FullName)
-    & signtool @cmd
+    & signtool @cmd 2>&1 | Tee-Object -FilePath $log -Append
 }
 
 Write-Host "=== Verifying primary EXE ===" -ForegroundColor Cyan
-& signtool verify /pa /all (Join-Path $dist "$Name.exe") | Out-Host
+& signtool verify /pa /all (Join-Path $dist "$Name.exe") 2>&1 | Tee-Object -FilePath $log -Append | Out-Host
 
 if ($SkipInstallerBuild) {
     Write-Host "Skipping installer build as requested."
@@ -65,7 +66,7 @@ if ($setupExe) {
         $cmd += @("/sha1", $CertThumbprint)
     }
     $cmd += @("/tr", $TimestampUrl, "/td", "sha256", $setupExe.FullName)
-    & signtool @cmd
+    & signtool @cmd 2>&1 | Tee-Object -FilePath $log -Append
     Write-Host "Installer signed: $($setupExe.FullName)" -ForegroundColor Green
 } else {
     Write-Warning "Installer not found in Output\ folder."
