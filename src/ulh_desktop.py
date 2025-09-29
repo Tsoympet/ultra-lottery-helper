@@ -10,6 +10,35 @@ Oracle Lottery Predictor — Native Desktop UI (PySide6)
 
 import os
 import sys
+
+# ----- Version detection helper -----
+def get_app_version() -> str:
+    try:
+        try:
+            from ultra_lottery_helper import __version__ as v
+            if isinstance(v, str) and v.strip():
+                return v.strip()
+        except Exception:
+            pass
+        import re, os
+        from pathlib import Path as _P
+        HERE = _P(__file__).resolve().parent
+        root = HERE.parent
+        pyproj = root / "pyproject.toml"
+        if pyproj.exists():
+            t = pyproj.read_text(encoding="utf-8", errors="ignore")
+            m = re.search(r'(?m)^\s*version\s*=\s*"([0-9]+\.[0-9]+\.[0-9]+)"', t)
+            if m:
+                return m.group(1)
+        vd = root / "version_detected.txt"
+        if vd.exists():
+            v = vd.read_text(encoding="utf-8", errors="ignore").strip()
+            if v:
+                return v
+    except Exception:
+        pass
+    return "6.3.0"
+
 import traceback
 import runpy
 import pathlib
@@ -39,8 +68,8 @@ except ModuleNotFoundError:
 from ulh_learning import record_outcome, learn_after_draw, get_status_summary
 
 try:
-    from PySide6.QtCore import Qt, QSize, Slot
-    from PySide6.QtGui import QAction, QIcon
+    from PySide6.QtCore import Qt, QSize, Slot, QTimer
+    from PySide6.QtGui import QAction, QIcon, QPixmap
     from PySide6.QtWidgets import (
         QInputDialog, QMessageBox,
         QApplication, QMainWindow, QWidget, QTabWidget, QVBoxLayout, QHBoxLayout,
@@ -382,7 +411,7 @@ def _collect_cfg(self) -> Config:
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Oracle Lottery Predictor — Desktop")
+        self.setWindowTitle(f"Oracle Lottery Predictor — Desktop v{get_app_version()}")
         self.setMinimumSize(QSize(1000,700))
         icon_path = HERE.parent / "assets" / "icon.ico"
         if icon_path.exists():
@@ -407,7 +436,11 @@ class MainWindow(QMainWindow):
 
 def main():
     app=QApplication(sys.argv)
+    from PySide6.QtWidgets import QSplashScreen
+    pix = QPixmap(str((HERE.parent / "assets" / "splash.png")))
+    splash = QSplashScreen(pix); splash.show(); app.processEvents()
     win=MainWindow(); win.show()
+    QTimer.singleShot(1200, splash.close)
     return app.exec()
 
 if __name__=="__main__":

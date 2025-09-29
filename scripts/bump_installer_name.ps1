@@ -5,20 +5,11 @@ param(
   [string]$BuildNumber = ""
 )
 if (-not (Test-Path $IssPath)) { throw "ISS not found: $IssPath" }
-if (-not $Tag) { throw "Provide -Tag like v6.3.2" }
 $ver = $Tag.TrimStart("v")
-if ($ver -notmatch '^\d+\.\d+\.\d+$') { throw "Tag must be like vX.Y.Z" }
-if (-not $BuildNumber) { $BuildNumber = "000" }
-# Normalize build number as 3-4 digits
-try {
-  $bnInt = [int]$BuildNumber
-  $BuildNumber = ("{0:d4}" -f $bnInt)
-} catch {
-  # leave as-is
-}
-
+if ($ver -notmatch '^\d+\.\d+\.\d+$') { throw "Tag must look like vX.Y.Z" }
+if (-not $BuildNumber) { $BuildNumber = "1" }
+try { $bnInt = [int]$BuildNumber; $BuildNumber = ("{0:d4}" -f $bnInt) } catch {}
 $baseName = "OracleLotteryPredictor-Setup-v$ver-b$BuildNumber"
-
 $iss = Get-Content $IssPath -Raw
 if ($iss -match '(?m)^OutputBaseFilename=.*$') {
   $iss = [regex]::Replace($iss, '(?m)^OutputBaseFilename=.*$', "OutputBaseFilename=$baseName")

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 
 
 def _last_report_path() -> Path:
@@ -37,7 +39,6 @@ Design notes
 - Persists everything under ./data/learning/ (SQLite + JSON).
 - You can import and call these functions from the desktop app if desired.
 """
-from __future__ import annotations
 import os, json, sqlite3, datetime as dt
 from pathlib import Path
 from typing import List, Dict, Tuple, Optional
