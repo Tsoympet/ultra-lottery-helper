@@ -88,9 +88,10 @@ jobs:
         shell: pwsh
         run: |
           $env:QT_QPA_PLATFORM = "offscreen"
-          python - << 'PY'
-          import os
-          os.environ["QT_QPA_PLATFORM"] = "offscreen"
-          import src.ulh_desktop as app
-          print("Desktop module:", app.__name__)
-          PY
+          $code = @"
+import os
+os.environ['QT_QPA_PLATFORM'] = 'offscreen'
+import src.ulh_desktop as app
+print('Desktop module:', app.__name__)
+"@
+          python -c $code
