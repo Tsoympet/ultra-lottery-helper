@@ -14,9 +14,6 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12']
-        exclude:
-          # Example: skip combos if wheels are flaky for your project
-          # - python-version: '3.12'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,22 +28,23 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           pip install pytest
-          # Ensure PySide6 if not already installed
           python - << 'PY'
           import importlib, sys, subprocess
           try:
               importlib.import_module("PySide6")
           except Exception:
-              subprocess.check_call([sys.executable, "-m", "pip", "install", "PySide6"))
+              subprocess.check_call([sys.executable, "-m", "pip", "install", "PySide6"])
           PY
 
       - name: Install Qt/GL runtime libs (headless)
         run: |
           sudo apt-get update
-          sudo apt-get install -y             libegl1 libgl1 libopengl0 libglx0             libxkbcommon-x11-0 libxcb-xinerama0 libxcb1 libx11-xcb1 libx11-6             libdbus-1-3 libxi6 libxcursor1
+          sudo apt-get install -y \
+            libegl1 libgl1 libopengl0 libglx0 \
+            libxkbcommon-x11-0 libxcb-xinerama0 libxcb1 libx11-xcb1 libx11-6 \
+            libdbus-1-3 libxi6 libxcursor1
 
       - name: Byte-compile sources
-        shell: bash
         run: |
           if [ -d src ]; then
             python - << 'PY'
@@ -57,7 +55,6 @@ jobs:
           fi
 
       - name: Smoke import — desktop UI (offscreen)
-        shell: bash
         env:
           QT_QPA_PLATFORM: offscreen
         run: |
@@ -84,9 +81,6 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12']
-        exclude:
-          # Example placeholder
-          # - python-version: '3.9'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -102,23 +96,14 @@ jobs:
           python -m pip install --upgrade pip
           if (Test-Path requirements.txt) { pip install -r requirements.txt }
           pip install pytest
-          python - <<'PY'
-import importlib, sys, subprocess
-try:
-    importlib.import_module("PySide6")
-except Exception:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "PySide6"])
-PY
+          python -c "import importlib, sys, subprocess; \
+try:\n importlib.import_module('PySide6')\nexcept Exception:\n subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'PySide6'])"
 
       - name: Byte-compile sources
         shell: pwsh
         run: |
           if (Test-Path src) {
-            python - <<'PY'
-import compileall, sys
-ok = compileall.compile_dir('src', maxlevels=10, force=True, quiet=1)
-sys.exit(0 if ok else 1)
-PY
+            python -c "import compileall, sys; ok=compileall.compile_dir('src', maxlevels=10, force=True, quiet=1); sys.exit(0 if ok else 1)"
           }
 
       - name: Smoke import — desktop UI (offscreen)
@@ -144,11 +129,8 @@ PY
         macos-image: ['macos-13', 'macos-14']
         python-version: ['3.9', '3.10', '3.11', '3.12']
         exclude:
-          # Adjust if some wheel combos are unavailable/buggy for your repo
           - macos-image: 'macos-13'
             python-version: '3.12'
-          # - macos-image: 'macos-14'
-          #   python-version: '3.9'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
