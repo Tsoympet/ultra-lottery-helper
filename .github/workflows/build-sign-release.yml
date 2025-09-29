@@ -42,12 +42,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: unsigned-dist
-          path: dist/OracleLotteryPredictor/**
+          path: scripts/dist/OracleLotteryPredictor/**
 
   sign-and-installer:
     name: Sign Binaries & Build Installer (self-hosted)
     needs: build-windows
-    # A self-hosted Windows runner with SignTool + Inno Setup + your certificate installed
     runs-on: [self-hosted, windows, ev-token]
     steps:
       - name: Checkout
@@ -90,32 +89,33 @@ jobs:
           # Build again to ensure paths; then sign & build installer
           .\build_and_sign.ps1 -CertThumbprint "$thumb" -TimestampUrl "$ts"
 
+      - name: Upload signing log
+        uses: actions/upload-artifact@v4
+        with:
+          name: signing-log
+          path: signing-log.txt
 
-- name: Upload signing log
-  uses: actions/upload-artifact@v4
-  with:
-    name: signing-log
-    path: signing-log.txt
+      - name: Optional VirusTotal upload (installer)
+        if: ${{ secrets.VIRUSTOTAL_API_KEY != '' }}
+        shell: pwsh
+        env:
+          VT_API_KEY: ${{ secrets.VIRUSTOTAL_API_KEY }}
+        run: |
+          $installer = Get-ChildItem .\Output -Filter *.exe | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if (-not $installer) { throw "Installer not found for VirusTotal" }
+          $filePath = $installer.FullName
+          Write-Host "Uploading to VirusTotal: $filePath"
+          $resp = curl.exe -s -X POST "https://www.virustotal.com/api/v3/files" -H "x-apikey: $Env:VT_API_KEY" -F "file=@`"$filePath`""
+          $resp | Out-File -FilePath vt-upload-response.json -Encoding utf8
+          Write-Host "VirusTotal response saved to vt-upload-response.json"
 
-- name: Optional VirusTotal upload (installer)
-  if: ${{ secrets.VIRUSTOTAL_API_KEY != '' }}
-  shell: pwsh
-  env:
-    VT_API_KEY: ${{ secrets.VIRUSTOTAL_API_KEY }}
-  run: |
-    $installer = Get-ChildItem .\Output -Filter *.exe | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-    if (-not $installer) { throw "Installer not found for VirusTotal" }
-    $filePath = $installer.FullName
-    Write-Host "Uploading to VirusTotal: $filePath"
-    $resp = curl.exe -s -X POST "https://www.virustotal.com/api/v3/files" -H "x-apikey: $Env:VT_API_KEY" -F "file=@`"$filePath`""
-    $resp | Out-File -FilePath vt-upload-response.json -Encoding utf8
-    Write-Host "VirusTotal response saved to vt-upload-response.json"
-- name: Upload VirusTotal response
-  if: ${{ secrets.VIRUSTOTAL_API_KEY != '' }}
-  uses: actions/upload-artifact@v4
-  with:
-    name: virustotal-response
-    path: vt-upload-response.json
+      - name: Upload VirusTotal response
+        if: ${{ secrets.VIRUSTOTAL_API_KEY != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: virustotal-response
+          path: vt-upload-response.json
+
       - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
@@ -133,11 +133,11 @@ jobs:
           path: ./artifacts
 
       - name: Read CHANGELOG
+        id: changelog
         run: |
           echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
-          Get-Content CHANGELOG.md -Raw >> $GITHUB_OUTPUT
+          cat CHANGELOG.md >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-        id: changelog
 
       - name: Generate release notes
         id: notes
@@ -149,10 +149,11 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           name: Oracle Lottery Predictor ${{ github.ref_name }}
-          body: ${{ steps.notes.outputs.release_body }}
+          body: |
+            ${{ steps.notes.outputs.release_body }}
 
-**Changelog:**
-${{ steps.changelog.outputs.CHANGELOG }}
+            **Changelog:**
+            ${{ steps.changelog.outputs.CHANGELOG }}
           draft: false
           prerelease: false
           files: |
