@@ -1,4 +1,4 @@
-name: Build, Sign & Release (Oracle Lottery Predictor)
+   name: Build, Sign & Release (Oracle Lottery Predictor)
 
 on:
   push:
@@ -8,7 +8,12 @@ on:
 
 jobs:
   build-windows:
+    name: Build (Windows, Py${{ matrix.python-version }})
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.10', '3.11']   # add/remove versions as you like
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,7 +23,8 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
 
       - name: Install deps
         run: |
@@ -39,7 +45,9 @@ jobs:
             --add-data "..\assets;assets" `
             --add-data "..\data;data"
 
-      - name: Upload unsigned dist
+      # Για να μην μπερδεύεται το επόμενο job, ανεβάζουμε το artifact μόνο από Py 3.10
+      - name: Upload unsigned dist (primary artifact from Py3.10)
+        if: ${{ matrix.python-version == '3.10' }}
         uses: actions/upload-artifact@v4
         with:
           name: unsigned-dist
@@ -64,6 +72,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
+          cache: 'pip'
 
       - name: Install deps
         run: |
@@ -106,6 +115,7 @@ jobs:
           Write-Host "Uploading to VirusTotal: $filePath"
           $resp = curl.exe -s -X POST "https://www.virustotal.com/api/v3/files" -H "x-apikey: $Env:VT_API_KEY" -F "file=@`"$filePath`""
           $resp | Out-File -FilePath vt-upload-response.json -Encoding utf8
+          Write-Host "VirusTotal response saved to vt-upload-response.json"
 
       - name: Upload VirusTotal response
         if: ${{ secrets.VIRUSTOTAL_API_KEY != '' }}
@@ -136,9 +146,11 @@ jobs:
           if [ -f CHANGELOG.md ]; then cat CHANGELOG.md >> $GITHUB_OUTPUT; else echo "No CHANGELOG.md"; fi
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Create Release
+      - name: Create Draft Release
         uses: softprops/action-gh-release@v2
         with:
+          draft: true
+          prerelease: false
           tag_name: ${{ github.ref_name }}
           name: Oracle Lottery Predictor ${{ github.ref_name }}
           body: |
@@ -151,3 +163,4 @@ jobs:
             artifacts/unsigned-dist/**/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
