@@ -20,6 +20,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Clean old installer folder
+        shell: pwsh
+        run: |
+          if (Test-Path dist_installer) { Remove-Item dist_installer -Recurse -Force }
+
       - name: Verify required files exist
         shell: pwsh
         run: |
@@ -86,7 +91,7 @@ jobs:
       - name: Compute SHA256 checksums
         shell: pwsh
         run: |
-          $exe = "dist\ultra_lottery_helper.exe"
+          $exe = "dist/ultra_lottery_helper.exe"
           $inst = Get-ChildItem -Path "dist_installer" -Filter "OracleLotteryPredictorInstaller_*.exe" | Select-Object -First 1
           $exeHash  = (Get-FileHash -Path $exe -Algorithm SHA256).Hash
           $instHash = (Get-FileHash -Path $inst.FullName -Algorithm SHA256).Hash
@@ -99,8 +104,8 @@ jobs:
         with:
           name: OracleLotteryPredictor_build
           path: |
-            dist\ultra_lottery_helper.exe
-            dist_installer\OracleLotteryPredictorInstaller_*.exe
+            dist/ultra_lottery_helper.exe
+            dist_installer/OracleLotteryPredictorInstaller_*.exe
             sha256.txt
 
       - name: Attach assets to the GitHub Release
