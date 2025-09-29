@@ -1,97 +1,181 @@
-name: CI
+name: CI — Oracle Lottery Predictor
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  test-linux:
+  ubuntu:
+    name: Ubuntu (Py${{ matrix.python-version }})
     runs-on: ubuntu-latest
-    env:
-      QT_QPA_PLATFORM: offscreen   # avoid Qt display errors
-      MPLBACKEND: Agg              # headless matplotlib
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12']
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
-          cache: "pip"
+          python-version: ${{ matrix.python-version }}
 
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-
-      - name: Smoke-compile core
-        run: |
-          if [ -f src/ultra_lottery_helper.py ]; then python -m py_compile src/ultra_lottery_helper.py; fi
-
-      - name: Import test (core API)
-        run: |
+          pip install pytest
           python - << 'PY'
-          import os, pandas as pd
-          from src.ultra_lottery_helper import GAMES, Config, _load_all_history
-          # Just touch TZOKER loading path; no files required
-          print("Games:", list(GAMES.keys()))
-          cfg = Config()
-          print("Config iterations:", cfg.iterations)
-          # Skip actual I/O if data missing
-          d, log = _load_all_history("TZOKER", use_online=False)
-          print("Load log (ok if empty/missing):", log[:120] if isinstance(log, str) else log)
-          print("CI core import OK")
-          PY
-
-      - name: Import test (desktop UI, offscreen)
-        run: |
-          python - << 'PY'
-          import os
-          os.environ["QT_QPA_PLATFORM"] = "offscreen"
+          import importlib, sys, subprocess
           try:
-            import src.ulh_desktop as app
-            print("PySide6 desktop module imported:", app.__name__)
-          except Exception as e:
-            # Don't fail CI if PySide6 not present in minimal env;
-            # but it *should* be in requirements.txt so this should pass.
-            raise
+              importlib.import_module("PySide6")
+          except Exception:
+              subprocess.check_call([sys.executable, "-m", "pip", "install", "PySide6"])
           PY
 
-  # Optional: quick Windows compile check (no packaging)
-  test-windows:
+      - name: Install Qt/GL runtime libs (headless)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libegl1 libgl1 libopengl0 libglx0 \
+            libxkbcommon-x11-0 libxcb-xinerama0 libxcb1 libx11-xcb1 libx11-6 \
+            libdbus-1-3 libxi6 libxcursor1
+
+      - name: Byte-compile sources
+        run: |
+          if [ -d src ]; then
+            python - << 'PY'
+            import compileall, sys
+            ok = compileall.compile_dir('src', maxlevels=10, force=True, quiet=1)
+            sys.exit(0 if ok else 1)
+            PY
+          fi
+
+      - name: Smoke import — desktop UI (offscreen)
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          python - <<'PY'
+          import os, sys
+          os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+          import PySide6.QtWidgets as qw
+          print("Qt import OK:", qw)
+          sys.path.append('src')
+          import ulh_desktop as app
+          print("Desktop module:", app.__name__)
+          PY
+
+      - name: Run pytest
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: pytest -q --disable-warnings --maxfail=1
+
+  windows:
+    name: Windows (Py${{ matrix.python-version }})
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12']
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
-          cache: "pip"
+          python-version: ${{ matrix.python-version }}
 
       - name: Install deps
         shell: pwsh
         run: |
           python -m pip install --upgrade pip
           if (Test-Path requirements.txt) { pip install -r requirements.txt }
+          pip install pytest
+          python -c "import importlib, sys, subprocess; \
+try:\n importlib.import_module('PySide6')\nexcept Exception:\n subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'PySide6'])"
 
-      - name: Smoke-compile core
+      - name: Byte-compile sources
         shell: pwsh
         run: |
-          if (Test-Path src\ultra_lottery_helper.py) { python -m py_compile src\ultra_lottery_helper.py }
+          if (Test-Path src) {
+            python -c "import compileall, sys; ok=compileall.compile_dir('src', maxlevels=10, force=True, quiet=1); sys.exit(0 if ok else 1)"
+          }
 
-      - name: Import test (desktop UI)
+      - name: Smoke import — desktop UI (offscreen)
         shell: pwsh
+        env:
+          QT_QPA_PLATFORM: offscreen
         run: |
-          $env:QT_QPA_PLATFORM = "offscreen"
-          $code = @"
-import os
-os.environ['QT_QPA_PLATFORM'] = 'offscreen'
-import src.ulh_desktop as app
-print('Desktop module:', app.__name__)
-"@
-          python -c $code
+          python -c "import os,sys; os.environ.setdefault('QT_QPA_PLATFORM','offscreen'); import PySide6.QtWidgets as qw; print('Qt import OK:', qw); sys.path.append('src'); import ulh_desktop as app; print('Desktop module:', app.__name__)"
+
+      - name: Run pytest
+        shell: pwsh
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: pytest -q --disable-warnings --maxfail=1
+
+  macos:
+    name: macOS (${{ matrix.image }}, Py${{ matrix.python-version }})
+    runs-on: ${{ matrix.image }}
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ['macos-13', 'macos-14']
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+        exclude:
+          - image: 'macos-13'
+            python-version: '3.12'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install pytest
+          python - << 'PY'
+          import importlib, sys, subprocess
+          try:
+              importlib.import_module("PySide6")
+          except Exception:
+              subprocess.check_call([sys.executable, "-m", "pip", "install", "PySide6"])
+          PY
+
+      - name: Byte-compile sources
+        run: |
+          if [ -d src ]; then
+            python - << 'PY'
+            import compileall, sys
+            ok = compileall.compile_dir('src', maxlevels=10, force=True, quiet=1)
+            sys.exit(0 if ok else 1)
+            PY
+          fi
+
+      - name: Smoke import — desktop UI (offscreen)
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          python - <<'PY'
+          import os, sys
+          os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+          import PySide6.QtWidgets as qw
+          print("Qt import OK:", qw)
+          sys.path.append('src')
+          import ulh_desktop as app
+          print("Desktop module:", app.__name__)
+          PY
+
+      - name: Run pytest
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: pytest -q --disable-warnings --maxfail=1
