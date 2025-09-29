@@ -68,4 +68,4 @@ Filename: "{app}\ultra_lottery_helper.exe"; Description: "Launch Oracle Lottery 
 Name: "mysigner"; Command: "signtool sign /fd SHA256 /a /tr http://timestamp.digicert.com /td sha256 $f"
 
 [Files]
-Source: "dist\OracleLotteryPredictor\*"; DestDir: "{app}"; Flags: recursesubdirs
+Source: "dist\\OracleLotteryPredictor\\*"; DestDir: "{app}"; Flags: recursesubdirs
