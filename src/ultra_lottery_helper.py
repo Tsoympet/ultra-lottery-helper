@@ -142,7 +142,7 @@ GAMES: Dict[str, GameSpec] = {
     "EUROJACKPOT": GameSpec("EUROJACKPOT", 5, 50, 2, 12, ["n1","n2","n3","n4","n5","e1","e2"]),
     # European Lotteries
     "UK_NATIONAL_LOTTERY": GameSpec("UK_NATIONAL_LOTTERY", 6, 59, 0, 0, ["n1","n2","n3","n4","n5","n6"]),
-    "LA_PRIMITIVA": GameSpec("LA_PRIMITIVA", 6, 49, 1, 9, ["n1","n2","n3","n4","n5","n6","bonus"]),
+    "LA_PRIMITIVA": GameSpec("LA_PRIMITIVA", 6, 49, 1, 10, ["n1","n2","n3","n4","n5","n6","bonus"]),
     "SUPERENALOTTO": GameSpec("SUPERENALOTTO", 6, 90, 0, 0, ["n1","n2","n3","n4","n5","n6"]),
     "LOTO_FRANCE": GameSpec("LOTO_FRANCE", 5, 49, 1, 10, ["n1","n2","n3","n4","n5","chance"]),
     "LOTTO_6AUS49": GameSpec("LOTTO_6AUS49", 6, 49, 1, 10, ["n1","n2","n3","n4","n5","n6","super"]),
@@ -203,7 +203,7 @@ LOTTERY_METADATA = {
         "flag": "spain.png",
         "icon": "la_primitiva.png",
         "display_name": "La Primitiva",
-        "description": "Spanish lottery - 6 numbers (1-49) + 1 bonus (1-9)",
+        "description": "Spanish lottery - 6 numbers (1-49) + 1 reintegro (1-10)",
         "official_url": "https://www.loteriasyapuestas.es/en/la-primitiva",
     },
     "SUPERENALOTTO": {

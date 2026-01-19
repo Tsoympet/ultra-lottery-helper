@@ -48,7 +48,7 @@ Each lottery requires specific columns based on its game specification:
 
 #### La Primitiva (Spain)
 - `n1`, `n2`, `n3`, `n4`, `n5`, `n6` - Main numbers (1-49)
-- `bonus` - Bonus number (0-9)
+- `bonus` - Reintegro bonus number (1-10)
 - `date` - Draw date (optional)
 
 #### SuperEnalotto (Italy)
@@ -62,7 +62,7 @@ Each lottery requires specific columns based on its game specification:
 
 #### Lotto 6aus49 (Germany)
 - `n1`, `n2`, `n3`, `n4`, `n5`, `n6` - Main numbers (1-49)
-- `super` - Superzahl (0-9)
+- `super` - Superzahl (1-10)
 - `date` - Draw date (optional)
 
 #### Austrian Lotto

@@ -48,7 +48,7 @@ class TestEuropeanLotterySpecs:
         assert spec.main_pick == 6
         assert spec.main_max == 49
         assert spec.sec_pick == 1
-        assert spec.sec_max == 9
+        assert spec.sec_max == 10
         assert spec.cols == ["n1","n2","n3","n4","n5","n6","bonus"]
     
     def test_superenalotto_spec(self):
