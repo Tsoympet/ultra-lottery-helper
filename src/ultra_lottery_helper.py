@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Oracle Lottery Predictor — Offline Suite (v6.3.0, Native-Core)
+Oracle Lottery Predictor — Offline Suite (Native-Core)
 - Offline by default; optional online history fetching
 - History auto-merge per game (CSV/XLS/XLSX) from data/history/<game>/
 - EWMA + BMA + Luck/Unluck (adaptive) + ML ensemble (Prophet, LightGBM, RF, XGBoost, SVM)
@@ -17,6 +17,11 @@ Oracle Lottery Predictor — Offline Suite (v6.3.0, Native-Core)
 - Plot caching helper (_quick_df_sig) usable by any UI
 - No Gradio dependencies (pure core for native desktop/CLI)
 """
+
+try:
+    from .__version__ import __version__
+except (ImportError, ValueError):
+    __version__ = "6.3.0"
 
 import os
 import math
