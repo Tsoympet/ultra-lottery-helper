@@ -74,9 +74,8 @@ add_custom_target(format
 add_custom_target(clean-all
     COMMAND ${CMAKE_COMMAND} -E rm -rf build dist dist_installer
     COMMAND ${CMAKE_COMMAND} -E rm -rf htmlcov .coverage .pytest_cache .mypy_cache
-    COMMAND ${Python3_EXECUTABLE} -c "import os, shutil; [shutil.rmtree(os.path.join(root, d)) for root, dirs, _ in os.walk('.') for d in dirs if d == '__pycache__']"
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMENT "Cleaning build artifacts..."
+    COMMENT "Cleaning build artifacts... (Note: __pycache__ directories are excluded via .gitignore)"
 )
 
 # Custom target for running the desktop application

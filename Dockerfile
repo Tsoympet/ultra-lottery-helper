@@ -64,8 +64,5 @@ ENV PYTHONUNBUFFERED=1 \
     QT_QPA_PLATFORM=offscreen \
     PYTHONPATH=/app
 
-# Expose port if needed for future web interface
-EXPOSE 8080
-
 # Set default command to show help
 CMD ["python", "src/ulh_desktop.py", "--help"]
