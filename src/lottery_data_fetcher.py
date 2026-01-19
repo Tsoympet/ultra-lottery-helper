@@ -79,7 +79,7 @@ class LotteryDataFetcher:
     
     def __init__(
         self,
-        data_root: str = None,
+        data_root: Optional[str] = None,
         alert_email: Optional[str] = None,
         webhook_urls: Optional[Union[str, List[str]]] = None,
         notification_manager: Optional["NotificationManager"] = None,
@@ -101,11 +101,11 @@ class LotteryDataFetcher:
         self._load_json = load_json if callable(load_json) else None  # type: ignore
         self._save_json = save_json if callable(save_json) else None  # type: ignore
     
-    def _load_fetch_log(self) -> Dict:
+    def _load_fetch_log(self) -> Dict[str, Dict]:
         """Load the fetch log tracking when each lottery was last updated."""
         return load_json(self.fetch_log_file, default={}, logger=logger)
     
-    def _save_fetch_log(self):
+    def _save_fetch_log(self) -> None:
         """Save the fetch log with atomic write."""
         save_json(self.fetch_log_file, self.fetch_log, atomic=True, logger=logger)
 

@@ -5,6 +5,7 @@ Lottery Prediction Tracker - Prediction Comparison and Validation System
 Tracks predictions, compares with actual results, and provides accuracy metrics.
 """
 
+import argparse
 import logging
 import os
 import sys
@@ -466,10 +467,90 @@ class PredictionTracker:
         return removed_count
 
 
+def _handle_save(args: argparse.Namespace, tracker: PredictionTracker) -> None:
+    """Handle CLI save command."""
+    if not args.numbers or not args.draw_date:
+        print("Error: --numbers and --draw-date required for saving prediction")
+        sys.exit(1)
+    numbers = [int(x.strip()) for x in args.numbers.split(',')]
+    pred_id = tracker.save_prediction(args.save, args.draw_date, numbers)
+    print(f"✓ Prediction saved: {pred_id}")
+    print(f"  Lottery: {args.save}")
+    print(f"  Draw Date: {args.draw_date}")
+    print(f"  Numbers: {numbers}")
+
+
+def _handle_compare(args: argparse.Namespace, tracker: PredictionTracker) -> None:
+    """Handle CLI compare command."""
+    if not args.actual or not args.draw_date:
+        print("Error: --actual and --draw-date required for comparison")
+        sys.exit(1)
+    actual = [int(x.strip()) for x in args.actual.split(',')]
+    result = tracker.compare_with_draw(args.compare, args.draw_date, actual)
+    print(f"\n=== Prediction Comparison: {args.compare} ===")
+    print(f"Draw Date: {args.draw_date}")
+    print(f"Actual Numbers: {actual}")
+    print(f"\nEvaluated {result.get('predictions_evaluated', 0)} prediction(s)")
+    for r in result.get('results', []):
+        print(f"\nPrediction: {r['predicted_numbers']}")
+        print(f"Matches: {r['matched_numbers']} ({r['match_count']} total)")
+        print(f"Accuracy: {r['accuracy']}%")
+        print(f"Prize Tier: {r['prize_tier']}")
+
+
+def _handle_auto_compare(args: argparse.Namespace, tracker: PredictionTracker) -> None:
+    """Handle CLI auto-compare command."""
+    print("Running auto-comparison...")
+    results = tracker.auto_compare_latest(args.game)
+    for game, result in results.items():
+        if 'error' in result:
+            print(f"\n{game}: Error - {result['error']}")
+        elif 'message' in result:
+            print(f"\n{game}: {result['message']}")
+        else:
+            print(f"\n{game}: Evaluated {result.get('predictions_evaluated', 0)} prediction(s)")
+
+
+def _handle_stats(args: argparse.Namespace, tracker: PredictionTracker) -> None:
+    """Handle CLI statistics command."""
+    print("\n=== Prediction Accuracy Statistics ===")
+    stats_df = tracker.get_accuracy_stats(args.game, args.days)
+    if stats_df.empty:
+        print("No statistics available")
+    else:
+        print(stats_df.to_string(index=False))
+
+
+def _handle_pending(args: argparse.Namespace, tracker: PredictionTracker) -> None:
+    """Handle CLI pending command."""
+    print("\n=== Pending Predictions ===")
+    pending_df = tracker.get_pending_predictions(args.game)
+    if pending_df.empty:
+        print("No pending predictions")
+    else:
+        print(pending_df.to_string(index=False))
+
+
+def _execute_cli(args: argparse.Namespace, parser: Optional[argparse.ArgumentParser] = None) -> None:
+    """Execute CLI commands for prediction tracker."""
+    tracker = PredictionTracker()
+    if args.save:
+        _handle_save(args, tracker)
+    elif args.compare:
+        _handle_compare(args, tracker)
+    elif args.auto_compare:
+        _handle_auto_compare(args, tracker)
+    elif args.stats:
+        _handle_stats(args, tracker)
+    elif args.pending:
+        _handle_pending(args, tracker)
+    else:
+        if parser:
+            parser.print_help()
+
+
 def main():
     """Command-line interface for prediction tracker."""
-    import argparse
-    
     parser = argparse.ArgumentParser(description='Lottery Prediction Tracker')
     parser.add_argument('--save', type=str, metavar='GAME',
                        help='Save a prediction for a lottery')
@@ -491,74 +572,8 @@ def main():
                        help='Filter by specific lottery')
     parser.add_argument('--days', type=int, default=30,
                        help='Days to look back for stats (default: 30)')
-    
     args = parser.parse_args()
-    
-    tracker = PredictionTracker()
-    
-    if args.save:
-        if not args.numbers or not args.draw_date:
-            print("Error: --numbers and --draw-date required for saving prediction")
-            sys.exit(1)
-        
-        numbers = [int(x.strip()) for x in args.numbers.split(',')]
-        pred_id = tracker.save_prediction(args.save, args.draw_date, numbers)
-        print(f"✓ Prediction saved: {pred_id}")
-        print(f"  Lottery: {args.save}")
-        print(f"  Draw Date: {args.draw_date}")
-        print(f"  Numbers: {numbers}")
-    
-    elif args.compare:
-        if not args.actual or not args.draw_date:
-            print("Error: --actual and --draw-date required for comparison")
-            sys.exit(1)
-        
-        actual = [int(x.strip()) for x in args.actual.split(',')]
-        result = tracker.compare_with_draw(args.compare, args.draw_date, actual)
-        
-        print(f"\n=== Prediction Comparison: {args.compare} ===")
-        print(f"Draw Date: {args.draw_date}")
-        print(f"Actual Numbers: {actual}")
-        print(f"\nEvaluated {result.get('predictions_evaluated', 0)} prediction(s)")
-        
-        for r in result.get('results', []):
-            print(f"\nPrediction: {r['predicted_numbers']}")
-            print(f"Matches: {r['matched_numbers']} ({r['match_count']} total)")
-            print(f"Accuracy: {r['accuracy']}%")
-            print(f"Prize Tier: {r['prize_tier']}")
-    
-    elif args.auto_compare:
-        print("Running auto-comparison...")
-        results = tracker.auto_compare_latest(args.game)
-        
-        for game, result in results.items():
-            if 'error' in result:
-                print(f"\n{game}: Error - {result['error']}")
-            elif 'message' in result:
-                print(f"\n{game}: {result['message']}")
-            else:
-                print(f"\n{game}: Evaluated {result.get('predictions_evaluated', 0)} prediction(s)")
-    
-    elif args.stats:
-        print("\n=== Prediction Accuracy Statistics ===")
-        stats_df = tracker.get_accuracy_stats(args.game, args.days)
-        
-        if stats_df.empty:
-            print("No statistics available")
-        else:
-            print(stats_df.to_string(index=False))
-    
-    elif args.pending:
-        print("\n=== Pending Predictions ===")
-        pending_df = tracker.get_pending_predictions(args.game)
-        
-        if pending_df.empty:
-            print("No pending predictions")
-        else:
-            print(pending_df.to_string(index=False))
-    
-    else:
-        parser.print_help()
+    _execute_cli(args, parser)
 
 
 if __name__ == "__main__":

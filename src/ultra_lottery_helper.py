@@ -33,7 +33,7 @@ import os
 import textwrap
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 import multiprocessing as mp
 
 import numpy as np
@@ -105,14 +105,17 @@ DATA_ROOT = os.path.join(ROOT, "data", "history")
 EXPORT_ROOT = os.path.join(ROOT, "exports")
 os.makedirs(EXPORT_ROOT, exist_ok=True)
 
-def _rng(seed: Optional[int]):
+def _rng(seed: Optional[int]) -> np.random.Generator:
+    """Return a reproducible NumPy random generator."""
     return np.random.default_rng(int(seed or 42))
 
-def _now_ts():
+def _now_ts() -> str:
+    """Return a compact timestamp suitable for filenames."""
     import datetime as _dt
     return _dt.datetime.now().strftime("%Y%m%d_%H%M%S")
 
-def _ensure_game_export_dir(game: str):
+def _ensure_game_export_dir(game: str) -> str:
+    """Create and return the export directory for a game."""
     path = os.path.join(EXPORT_ROOT, game.lower())
     os.makedirs(path, exist_ok=True)
     return path
@@ -137,7 +140,8 @@ class _NoOpProgress:
     def tqdm(self, iterable, desc=None):
         return iterable
 
-def _ensure_progress(progress):
+def _ensure_progress(progress: Any) -> Any:
+    """Ensure a progress object exposes tqdm-like API."""
     return progress if (progress is not None and hasattr(progress, "tqdm")) else _NoOpProgress()
 
 # =============================================================================
