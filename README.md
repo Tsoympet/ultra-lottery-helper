@@ -178,6 +178,30 @@ docker-compose up oracle-lottery
 # For detailed Docker and CMake instructions, see DOCKER_CMAKE_README.md
 ```
 
+### Web Dashboard, Metrics, and Notifications
+
+Run the lightweight web UI (no extra dependencies) for configuration, real-time status, basic metrics, and test email/SMS logging:
+
+```bash
+# From repository root (defaults to localhost binding for safety)
+python -m src.web_dashboard --port 8080
+# Expose externally if needed:
+python -m src.web_dashboard --host 0.0.0.0 --port 8080
+# Start without binding to the scheduler (status only):
+python -m src.web_dashboard --no-scheduler
+```
+
+* Features: live status polling, scheduler config edits, metrics view, test alerts.
+* Metrics and notification logs are persisted under `data/`.
+
+For cloud deployments with auto-scaling, apply the provided Kubernetes template:
+
+```bash
+kubectl apply -f deploy/cloud/kubernetes.yaml
+```
+
+The manifest includes a Service for the dashboard and a HorizontalPodAutoscaler (HPA) targeting 70% CPU utilization.
+
 ---
 
 ## πŸ€– Advanced Features
