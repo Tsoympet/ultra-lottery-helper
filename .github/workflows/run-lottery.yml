@@ -95,8 +95,14 @@ jobs:
           python -m pip install --upgrade pip
           if (Test-Path requirements.txt) { pip install -r requirements.txt }
           pip install pytest
-          python -c "import importlib, sys, subprocess; \
-try:\n importlib.import_module('PySide6')\nexcept Exception:\n subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'PySide6'])"
+          $code = @'
+import importlib, sys, subprocess
+try:
+    importlib.import_module("PySide6")
+except Exception:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "PySide6"])
+'@
+          python -c $code
 
       - name: Byte-compile sources
         shell: pwsh
