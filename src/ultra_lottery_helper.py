@@ -347,12 +347,9 @@ def _load_all_history(game: str, use_online: bool = False) -> Tuple[pd.DataFrame
         return pd.DataFrame(), f"No valid data loaded. Issues: {', '.join(skipped)}"
 
     df = pd.concat(frames, ignore_index=True)
-    # Sort main numbers for games with 6 main picks (no secondary numbers from main pool)
-    if spec.main_pick == 6 and spec.sec_pick == 0:
-        arr = np.sort(df[["n1","n2","n3","n4","n5","n6"]].to_numpy(), axis=1)
-        df[["n1","n2","n3","n4","n5","n6"]] = arr
-    elif spec.main_pick == 6 and spec.sec_pick > 0:
-        # Games with 6 main + separate secondary numbers
+    # Sort main numbers based on game type
+    if spec.main_pick == 6:
+        # Games with 6 main picks (with or without secondary numbers)
         arr = np.sort(df[["n1","n2","n3","n4","n5","n6"]].to_numpy(), axis=1)
         df[["n1","n2","n3","n4","n5","n6"]] = arr
     else:
