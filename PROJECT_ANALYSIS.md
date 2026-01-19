@@ -219,7 +219,7 @@ except Exception as e:
 __version__ = "6.3.0"
 
 # Import everywhere
-from . import __version__
+from .__version__ import __version__
 ```
 
 **Priority:** LOW - Manual version management works but is error-prone.
