@@ -123,6 +123,8 @@ def _quick_df_sig(df: pd.DataFrame, game: str) -> str:
     sample = df[cols].tail(100)
     buf = sample.to_csv(index=False).encode("utf-8")
     # Note: SHA1 is used here only for cache key generation, not cryptography
+    # We keep SHA1 for backward compatibility with existing cache keys
+    # Modern alternatives like blake2b could be considered for new implementations
     h = hashlib.sha1(buf, usedforsecurity=False).hexdigest()  # nosec B324
     return f"{game}|{len(df)}|{h}"
 

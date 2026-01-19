@@ -49,7 +49,7 @@ def get_logger(name: str) -> logging.Logger:
 
 def load_json(
     path: Union[str, Path],
-    default: Optional[Any] = None,
+    default: Optional[Any] = ...,  # Use Ellipsis as sentinel
     logger: Optional[logging.Logger] = None
 ) -> Any:
     """
@@ -58,6 +58,7 @@ def load_json(
     Args:
         path: File path to load from
         default: Default value to return if file doesn't exist or is invalid
+                 If not provided, raises ValueError on errors
         logger: Optional logger for error reporting
         
     Returns:
@@ -72,7 +73,9 @@ def load_json(
         if not path.exists():
             if logger:
                 logger.debug(f"File not found: {path}, using default")
-            return default
+            if default is not ...:
+                return default
+            raise FileNotFoundError(f"File not found: {path}")
             
         content = path.read_text(encoding='utf-8')
         return json.loads(content)
@@ -80,14 +83,14 @@ def load_json(
     except json.JSONDecodeError as e:
         if logger:
             logger.error(f"Invalid JSON in {path}: {e}")
-        if default is not None:
+        if default is not ...:
             return default
         raise ValueError(f"Invalid JSON in {path}: {e}") from e
         
     except Exception as e:
         if logger:
             logger.error(f"Error reading {path}: {e}")
-        if default is not None:
+        if default is not ...:
             return default
         raise
 

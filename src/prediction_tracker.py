@@ -33,7 +33,9 @@ except ImportError as e:
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
-    get_logger = lambda name: logging.getLogger(name)
+    def get_logger(name: str) -> logging.Logger:
+        """Fallback logger factory."""
+        return logging.getLogger(name)
     # Simple fallback implementations
     def load_json(path, default=None, logger=None):
         import json
