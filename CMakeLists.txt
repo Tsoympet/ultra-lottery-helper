@@ -72,9 +72,9 @@ add_custom_target(format
 
 # Custom target for cleaning build artifacts
 add_custom_target(clean-all
-    COMMAND ${CMAKE_COMMAND} -E rm -rf build dist dist_installer *.egg-info
+    COMMAND ${CMAKE_COMMAND} -E rm -rf build dist dist_installer
     COMMAND ${CMAKE_COMMAND} -E rm -rf htmlcov .coverage .pytest_cache .mypy_cache
-    COMMAND find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+    COMMAND ${Python3_EXECUTABLE} -c "import os, shutil; [shutil.rmtree(os.path.join(root, d)) for root, dirs, _ in os.walk('.') for d in dirs if d == '__pycache__']"
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Cleaning build artifacts..."
 )

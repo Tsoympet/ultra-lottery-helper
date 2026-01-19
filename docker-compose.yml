@@ -62,8 +62,3 @@ services:
     restart: "no"
     profiles:
       - tools
-
-# Named volumes for persistent data (alternative to bind mounts)
-volumes:
-  lottery-data:
-  lottery-exports:
