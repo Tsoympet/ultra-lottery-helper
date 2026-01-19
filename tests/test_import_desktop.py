@@ -14,7 +14,8 @@ os.environ.setdefault("LIBGL_ALWAYS_SOFTWARE", "1")
 def _ensure_egl_runtime():
     """
     Best-effort helper to make EGL runtime available for PySide6 imports in headless
-    environments. It only attempts installation when ULH_AUTO_INSTALL_EGL is set.
+    environments. It only attempts installation when ULH_AUTO_INSTALL_EGL is set and may
+    run privileged package installs; enable only in controlled CI environments.
     """
     if ctypes.util.find_library("EGL"):
         return
