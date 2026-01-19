@@ -68,6 +68,7 @@ except ImportError:
             return None
 
 logger = get_logger('lottery_data_fetcher')
+WEBHOOK_TIMEOUT = 5
 
 
 class LotteryDataFetcher:
@@ -96,15 +97,9 @@ class LotteryDataFetcher:
         self.notification_manager = notification_manager or (
             NotificationManager(self.data_root) if NotificationManager else None
         )
-        self._http_post = getattr(requests, "post", None)
-        try:
-            self._load_json = load_json if callable(load_json) else None  # type: ignore
-        except NameError:
-            self._load_json = None
-        try:
-            self._save_json = save_json if callable(save_json) else None  # type: ignore
-        except NameError:
-            self._save_json = None
+        self._http_post = requests.post
+        self._load_json = load_json if callable(load_json) else None  # type: ignore
+        self._save_json = save_json if callable(save_json) else None  # type: ignore
     
     def _load_fetch_log(self) -> Dict:
         """Load the fetch log tracking when each lottery was last updated."""
@@ -125,7 +120,10 @@ class LotteryDataFetcher:
 
         main_cols = [c for c in spec.cols[: spec.main_pick] if c in df.columns]
         if main_cols:
-            main_valid = df[main_cols].apply(lambda col: col.between(1, spec.main_max, inclusive="both")).all().all()
+            main_valid = (
+                df[main_cols].ge(1).all().all()
+                and df[main_cols].le(spec.main_max).all().all()
+            )
             if not main_valid:
                 anomalies.append("main numbers out of range")
         if spec.sec_pick == 1:
@@ -199,7 +197,7 @@ class LotteryDataFetcher:
         }
         for url in self.webhook_urls:
             try:
-                self._http_post(url, json=payload, timeout=5)
+                self._http_post(url, json=payload, timeout=WEBHOOK_TIMEOUT)
             except Exception as exc:
                 logger.warning(f"Webhook POST to {url} failed: {exc}")
     
