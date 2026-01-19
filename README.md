@@ -46,6 +46,7 @@ Now ships as a **native desktop app (PySide6)** β€” no browser, no local se
 
 ## Features
 - Offline by default; optional online fetch
+- **βœ¨ NEW: AI/IA Learning System** - Adaptive machine learning that improves predictions over time (see [AI_SYSTEM_STATUS.md](AI_SYSTEM_STATUS.md))
 - **βœ¨ NEW: Automated Live Feed** - Fetch and store latest draw results automatically (see [DATA_FETCHER_README.md](DATA_FETCHER_README.md))
 - **βœ¨ NEW: Automated Scheduling** - Schedule periodic data fetching with configurable intervals (see [SCHEDULER_README.md](SCHEDULER_README.md))
 - **βœ¨ NEW: Prediction Tracking** - Save predictions, compare with results, track accuracy over time (see [PREDICTION_TRACKER_README.md](PREDICTION_TRACKER_README.md))
@@ -135,6 +136,27 @@ python src/prediction_tracker.py --pending
 
 # See full documentation
 cat PREDICTION_TRACKER_README.md
+```
+
+### AI/IA Learning System (New!)
+```bash
+# Record predictions for learning
+python src/ulh_learn_cli.py record-portfolio TZOKER "1 5 12 27 38" "3 14 22 33 41"
+
+# Record actual draw outcome
+python src/ulh_learn_cli.py record-outcome TZOKER --main "3 14 22 33 41" --sec "5"
+
+# Trigger learning and parameter optimization
+python src/ulh_learn_cli.py learn TZOKER --k 100 --replay 2
+
+# The AI system automatically adapts:
+# - Ensemble weights (EWMA, recency, ML)
+# - Luck/unluck factors
+# - Memory half-life
+# Based on actual prediction performance!
+
+# See full documentation
+cat AI_SYSTEM_STATUS.md
 ```
 
 ## Data Layout

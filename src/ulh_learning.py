@@ -47,8 +47,8 @@ import numpy as np
 import pandas as pd
 
 from ultra_lottery_helper import (
-    Config, GAMES, generate_candidates, select_portfolio, apply_ev_rerank,
-    expected_value_for_ticket, load_history, self_learning_replay
+    Config, GAMES, generate_candidates, apply_ev_rerank,
+    expected_value_for_ticket, self_learning_replay, _load_all_history
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -251,9 +251,9 @@ def learn_after_draw(game: str, k_limit: Optional[int] = None, self_replay_round
     state = update_model_state_from_eval(game, summary)
 
     # Optional deeper replay on full history (walk-forward)
-    cfg = Config(game=game)
+    cfg = Config()
     cfg = apply_state_to_config(cfg)
-    hist = load_history(game)
+    hist, _ = _load_all_history(game)
     if not hist.empty:
         _ = self_learning_replay(hist, game, cfg, rounds=self_replay_rounds)
 
