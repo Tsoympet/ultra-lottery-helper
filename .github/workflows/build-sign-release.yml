@@ -1,4 +1,4 @@
-       name: "Build, Sign & Release (Oracle Lottery Predictor)"
+name: "Build, Sign & Release (Oracle Lottery Predictor)"
 
 on:
   push:
