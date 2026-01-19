@@ -15,7 +15,8 @@ def _ensure_egl_runtime():
     """
     Best-effort helper to make EGL runtime available for PySide6 imports in headless
     environments. It only attempts installation when ULH_AUTO_INSTALL_EGL is set and may
-    run privileged package installs; enable only in controlled CI environments.
+    run privileged package installs; enable only in trusted CI environments with
+    controlled sudo configuration.
     """
     if ctypes.util.find_library("EGL"):
         return
@@ -27,6 +28,7 @@ def _ensure_egl_runtime():
     if not (apt and sudo):
         # Skip silently when package manager is unavailable to keep tests portable.
         return
+    attempted = False
     subprocess.run([sudo, "-n", apt, "update"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     subprocess.run(
         [sudo, "-n", apt, "install", "-y", "libegl1", "libgl1"],
@@ -34,6 +36,9 @@ def _ensure_egl_runtime():
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
+    attempted = True
+    if attempted and ctypes.util.find_library("EGL") is None:
+        print("Warning: libEGL installation attempt failed; ensure libegl1/libgl1 are installed.")
 
 
 @pytest.mark.skipif(
