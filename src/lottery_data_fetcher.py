@@ -6,6 +6,7 @@ Fetches latest draw results from official lottery sources and stores them locall
 """
 
 import os
+import json
 import sys
 import time
 from datetime import datetime, timedelta
@@ -37,6 +38,7 @@ except ImportError:
     # Fallback
     import logging
     get_logger = lambda name: logging.getLogger(name)
+    NotificationManager = None  # type: ignore
     try:
         from ultra_lottery_helper import (  # type: ignore
             DATA_ROOT,
@@ -62,7 +64,6 @@ except ImportError:
             return default or {}
         def save_json(path, data, atomic=True, logger=None):
             return None
-    NotificationManager = None  # type: ignore
 
 logger = get_logger('lottery_data_fetcher')
 
@@ -161,7 +162,11 @@ class LotteryDataFetcher:
             try:
                 existing = load_json(log_path, default=[], logger=logger) if 'load_json' in globals() else []
                 existing.append(entry)
-                save_json(log_path, existing, atomic=True, logger=logger) if 'save_json' in globals() else log_path.write_text("[]")
+                if 'save_json' in globals():
+                    save_json(log_path, existing, atomic=True, logger=logger)
+                else:
+                    log_path.parent.mkdir(parents=True, exist_ok=True)
+                    log_path.write_text(json.dumps(existing), encoding="utf-8")
             except Exception as exc:  # pragma: no cover - best effort
                 logger.warning(f"Failed to persist fallback notification log: {exc}")
 

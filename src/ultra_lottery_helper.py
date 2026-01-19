@@ -402,7 +402,7 @@ def fetch_online_history(game: str) -> Tuple[pd.DataFrame, str]:
         logger.warning(msg)
         return pd.DataFrame(), msg
     
-    url = urls.get(game) or api_endpoint
+    url = urls.get(game)
     
     # Rate limiter (shared across all fetch calls)
     if not hasattr(fetch_online_history, '_rate_limiter'):
@@ -482,6 +482,10 @@ def fetch_online_history(game: str) -> Tuple[pd.DataFrame, str]:
             if game not in urls:
                 msg = f"No HTML source configured for {game} and API returned no data"
                 return pd.DataFrame(), msg
+
+        if not url:
+            msg = f"No HTML source configured for {game}"
+            return pd.DataFrame(), msg
 
         # Retry the fetch with exponential backoff
         fetch_with_retry = retry_with_backoff(
