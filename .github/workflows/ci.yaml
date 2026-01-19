@@ -117,6 +117,18 @@ try:\n importlib.import_module('PySide6')\nexcept Exception:\n subprocess.check_
         env:
           QT_QPA_PLATFORM: offscreen
         run: pytest -q --disable-warnings --maxfail=1
+      
+      - name: Security scan with bandit
+        shell: pwsh
+        run: |
+          pip install bandit[toml]
+          bandit -r src/ || echo "Bandit found security issues"
+      
+      - name: Dependency security check with safety
+        shell: pwsh
+        run: |
+          pip install safety
+          safety check || echo "Safety found vulnerable dependencies"
 
   macos:
     name: macOS (${{ matrix.image }}, Py${{ matrix.python-version }})
@@ -179,3 +191,13 @@ try:\n importlib.import_module('PySide6')\nexcept Exception:\n subprocess.check_
         env:
           QT_QPA_PLATFORM: offscreen
         run: pytest -q --disable-warnings --maxfail=1
+
+      - name: Security scan with bandit (macOS)
+        run: |
+          pip install bandit[toml]
+          bandit -r src/ || echo "Bandit found security issues"
+      
+      - name: Dependency security check with safety (macOS)
+        run: |
+          pip install safety
+          safety check || echo "Safety found vulnerable dependencies"
