@@ -164,7 +164,7 @@ OPAP_TICKET_PRICE_DEFAULTS = {
     "SWISS_LOTTO": 2.50,  # CHF 2.50
 }
 
-# Lottery metadata: country, flag, icon, description
+# Lottery metadata: country, flag, icon, description, results source, jackpot info
 LOTTERY_METADATA = {
     "TZOKER": {
         "country": "Greece",
@@ -173,6 +173,8 @@ LOTTERY_METADATA = {
         "display_name": "TZOKER",
         "description": "Greek lottery - 5 main numbers (1-45) + 1 Joker (1-20)",
         "official_url": "https://www.opap.gr/en/web/opap-gr/tzoker",
+        "results_url": "https://www.opap.gr/en/web/opap-gr/tzoker-draw-results",
+        "has_jackpot": True,
     },
     "LOTTO": {
         "country": "Greece",
@@ -181,6 +183,8 @@ LOTTERY_METADATA = {
         "display_name": "Greek LOTTO",
         "description": "Greek lottery - 6 numbers (1-49)",
         "official_url": "https://www.opap.gr/en/web/opap-gr/lotto",
+        "results_url": "https://www.opap.gr/en/web/opap-gr/lotto-draw-results",
+        "has_jackpot": True,
     },
     "EUROJACKPOT": {
         "country": "European Union",
@@ -189,6 +193,8 @@ LOTTERY_METADATA = {
         "display_name": "EuroJackpot",
         "description": "Pan-European lottery - 5 main numbers (1-50) + 2 Euro numbers (1-12)",
         "official_url": "https://www.eurojackpot.org",
+        "results_url": "https://www.eurojackpot.org/en/results/",
+        "has_jackpot": True,
     },
     "UK_NATIONAL_LOTTERY": {
         "country": "United Kingdom",
@@ -197,6 +203,8 @@ LOTTERY_METADATA = {
         "display_name": "UK National Lottery",
         "description": "UK Lotto - 6 numbers (1-59)",
         "official_url": "https://www.national-lottery.co.uk",
+        "results_url": "https://www.national-lottery.co.uk/results/lotto/draw-history",
+        "has_jackpot": True,
     },
     "LA_PRIMITIVA": {
         "country": "Spain",
@@ -205,6 +213,8 @@ LOTTERY_METADATA = {
         "display_name": "La Primitiva",
         "description": "Spanish lottery - 6 numbers (1-49) + 1 reintegro (1-10)",
         "official_url": "https://www.loteriasyapuestas.es/en/la-primitiva",
+        "results_url": "https://www.loteriasyapuestas.es/en/la-primitiva/results",
+        "has_jackpot": True,
     },
     "SUPERENALOTTO": {
         "country": "Italy",
@@ -213,6 +223,8 @@ LOTTERY_METADATA = {
         "display_name": "SuperEnalotto",
         "description": "Italian lottery - 6 numbers (1-90)",
         "official_url": "https://www.superenalotto.com",
+        "results_url": "https://www.superenalotto.com/en/results",
+        "has_jackpot": True,
     },
     "LOTO_FRANCE": {
         "country": "France",
@@ -221,6 +233,8 @@ LOTTERY_METADATA = {
         "display_name": "Loto (France)",
         "description": "French lottery - 5 numbers (1-49) + 1 Chance (1-10)",
         "official_url": "https://www.fdj.fr/jeux-de-tirage/loto",
+        "results_url": "https://www.fdj.fr/jeux-de-tirage/loto/resultats",
+        "has_jackpot": True,
     },
     "LOTTO_6AUS49": {
         "country": "Germany",
@@ -229,6 +243,8 @@ LOTTERY_METADATA = {
         "display_name": "Lotto 6aus49",
         "description": "German lottery - 6 numbers (1-49) + 1 Superzahl (1-10)",
         "official_url": "https://www.lotto.de/lotto-6aus49",
+        "results_url": "https://www.lotto.de/lotto-6aus49/lottozahlen",
+        "has_jackpot": True,
     },
     "AUSTRIAN_LOTTO": {
         "country": "Austria",
@@ -237,6 +253,8 @@ LOTTERY_METADATA = {
         "display_name": "Austrian Lotto",
         "description": "Austrian lottery - 6 numbers (1-45)",
         "official_url": "https://www.win2day.at/lottery/lotto",
+        "results_url": "https://www.win2day.at/lottery/lotto/results",
+        "has_jackpot": True,
     },
     "SWISS_LOTTO": {
         "country": "Switzerland",
@@ -245,6 +263,8 @@ LOTTERY_METADATA = {
         "display_name": "Swiss Lotto",
         "description": "Swiss lottery - 6 numbers (1-42) + 1 Lucky number (1-6)",
         "official_url": "https://www.swisslos.ch/en/swisslotto",
+        "results_url": "https://www.swisslos.ch/en/swisslotto/information/winning-numbers.html",
+        "has_jackpot": True,
     },
 }
 

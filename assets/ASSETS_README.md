@@ -84,11 +84,27 @@ LOTTERY_METADATA = {
         "country": "United Kingdom",
         "flag": "uk.png",
         "icon": "uk_national_lottery.png",
+        "display_name": "UK National Lottery",
+        "description": "UK Lotto - 6 numbers (1-59)",
         "official_url": "https://www.national-lottery.co.uk",
+        "results_url": "https://www.national-lottery.co.uk/results/lotto/draw-history",
+        "has_jackpot": True,
     },
     # ... other lotteries
 }
 ```
+
+### Metadata Fields
+
+Each lottery includes the following information:
+- **country**: Country where the lottery operates
+- **flag**: Filename of the country flag image
+- **icon**: Filename of the lottery icon/logo image
+- **display_name**: Human-readable name for display
+- **description**: Brief description of the lottery game rules
+- **official_url**: Official lottery website
+- **results_url**: URL where official draw results can be found
+- **has_jackpot**: Boolean indicating if the lottery offers a jackpot prize
 
 ## Legal Notice
 

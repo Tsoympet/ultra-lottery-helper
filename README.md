@@ -42,6 +42,8 @@ Now ships as a **native desktop app (PySide6)** β€” no browser, no local se
 ### Switzerland
 - **Swiss Lotto** πŸ‡¨πŸ‡­ - 6 numbers (1-42) + 1 Lucky number (1-6)
 
+**Note**: All supported lotteries offer progressive jackpots. See [LOTTERY_RESULTS_SOURCES.md](LOTTERY_RESULTS_SOURCES.md) for official results URLs and detailed information about each lottery.
+
 ## Features
 - Offline by default; optional online fetch
 - Auto-merge histories from `data/history/<game>/` (CSV/XLS/XLSX)

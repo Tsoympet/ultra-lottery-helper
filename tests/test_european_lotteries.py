@@ -132,13 +132,17 @@ class TestLotteryMetadata:
     
     def test_metadata_structure(self):
         """Test that metadata has required fields."""
-        required_fields = ["country", "flag", "icon", "display_name", "description", "official_url"]
+        required_fields = ["country", "flag", "icon", "display_name", "description", "official_url", "results_url", "has_jackpot"]
         for lottery_name, metadata in LOTTERY_METADATA.items():
             for field in required_fields:
                 assert field in metadata, \
                     f"{lottery_name} metadata missing field: {field}"
-                assert isinstance(metadata[field], str)
-                assert len(metadata[field]) > 0
+                if field == "has_jackpot":
+                    assert isinstance(metadata[field], bool), \
+                        f"{lottery_name} has_jackpot should be boolean"
+                else:
+                    assert isinstance(metadata[field], str)
+                    assert len(metadata[field]) > 0
     
     def test_flag_filenames(self):
         """Test that flag filenames are properly formatted."""
@@ -170,6 +174,19 @@ class TestLotteryMetadata:
         }
         for lottery_name, expected_country in expected_countries.items():
             assert LOTTERY_METADATA[lottery_name]["country"] == expected_country
+    
+    def test_results_url_format(self):
+        """Test that results URLs are properly formatted."""
+        for lottery_name, metadata in LOTTERY_METADATA.items():
+            results_url = metadata["results_url"]
+            assert results_url.startswith("http://") or results_url.startswith("https://"), \
+                f"{lottery_name} results_url should be a valid URL"
+    
+    def test_all_have_jackpot_info(self):
+        """Test that all lotteries have jackpot information."""
+        for lottery_name, metadata in LOTTERY_METADATA.items():
+            assert metadata["has_jackpot"] is True, \
+                f"{lottery_name} should have jackpot information (all major lotteries have jackpots)"
 
 
 class TestGameSpecConsistency:
