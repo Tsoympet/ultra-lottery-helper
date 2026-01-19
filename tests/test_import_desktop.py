@@ -21,7 +21,7 @@ def _ensure_egl_runtime():
     """
     if ctypes.util.find_library("EGL"):
         return
-    auto_install = os.environ.get("ULH_AUTO_INSTALL_EGL")
+    auto_install = os.environ.get("ULH_AUTO_INSTALL_EGL", "").lower() == "ci-sudo-ok"
     ci_context = os.environ.get("CI", "").lower() in {"1", "true", "yes"}
     if not (auto_install and ci_context):
         return
@@ -45,8 +45,8 @@ def _ensure_egl_runtime():
             stderr=subprocess.DEVNULL,
             timeout=60,
         )
-    except subprocess.TimeoutExpired:
-        warnings.warn("Timed out while attempting to install libegl1/libgl1.")
+    except (subprocess.TimeoutExpired, subprocess.SubprocessError, PermissionError, FileNotFoundError):
+        warnings.warn("Automatic libegl1/libgl1 installation failed; install manually if needed.")
         return
     if ctypes.util.find_library("EGL") is None:
         warnings.warn("libEGL installation attempt failed; ensure libegl1/libgl1 are installed.")
