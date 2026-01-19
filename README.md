@@ -183,9 +183,11 @@ docker-compose up oracle-lottery
 Run the lightweight web UI (no extra dependencies) for configuration, real-time status, basic metrics, and test email/SMS logging:
 
 ```bash
-# From repository root
+# From repository root (defaults to localhost binding for safety)
+python -m src.web_dashboard --port 8080
+# Expose externally if needed:
 python -m src.web_dashboard --host 0.0.0.0 --port 8080
-# Or start without binding to the scheduler (status only)
+# Start without binding to the scheduler (status only):
 python -m src.web_dashboard --no-scheduler
 ```
 

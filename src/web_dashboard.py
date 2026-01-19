@@ -289,6 +289,10 @@ def _html_response(handler: BaseHTTPRequestHandler, payload: bytes, status: int 
 
 def _read_json(handler: BaseHTTPRequestHandler) -> Dict[str, Any]:
     length = int(handler.headers.get("Content-Length", "0"))
+    if length > 1_000_000:  # 1MB guardrail
+        handler.send_error(413, "Payload too large")
+        return {}
+
     body = handler.rfile.read(length) if length else b"{}"
     try:
         return json.loads(body.decode("utf-8"))
@@ -332,7 +336,7 @@ def build_handler(state: DashboardState):
                         "Web dashboard test notification",
                     ),
                     "sms": state.notifications.send_sms(
-                        phone or "+10000000000",
+                        phone or "+15550000000",
                         "Oracle Lottery dashboard test SMS",
                     ),
                 }
@@ -345,7 +349,7 @@ def build_handler(state: DashboardState):
 
 
 def start_dashboard_server(
-    host: str = "0.0.0.0",
+    host: str = "127.0.0.1",
     port: int = DEFAULT_PORT,
     scheduler: Optional["LotteryScheduler"] = None,
     data_root: Optional[Path] = None,
@@ -361,7 +365,7 @@ def start_dashboard_server(
 
 def main():
     parser = argparse.ArgumentParser(description="Start the Oracle Lottery web dashboard")
-    parser.add_argument("--host", default="0.0.0.0", help="Host to bind (default: 0.0.0.0)")
+    parser.add_argument("--host", default="127.0.0.1", help="Host to bind (default: 127.0.0.1)")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT, help="Port to bind (default: 8080)")
     parser.add_argument("--data-root", default=None, help="Override data directory")
     parser.add_argument(

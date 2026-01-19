@@ -29,7 +29,8 @@ spec:
               mountPath: /app/data
       volumes:
         - name: data
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: oracle-lottery-data
 ---
 apiVersion: v1
 kind: Service
