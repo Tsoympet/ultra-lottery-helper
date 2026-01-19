@@ -43,6 +43,5 @@ def test_import_ulh_desktop_offscreen():
             "libEGL runtime missing; install libegl1/libgl1 or set ULH_AUTO_INSTALL_EGL=ci-sudo-ok in CI"
         )
     pytest.importorskip("PySide6.QtWidgets")
-    os.environ.setdefault("QT_QPA_PLATFORM", "minimal")
     sys.path.append("src")
     import ulh_desktop  # noqa: F401
