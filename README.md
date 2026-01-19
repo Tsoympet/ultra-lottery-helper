@@ -48,6 +48,7 @@ Now ships as a **native desktop app (PySide6)** β€” no browser, no local se
 - Offline by default; optional online fetch
 - **βœ¨ NEW: Automated Live Feed** - Fetch and store latest draw results automatically (see [DATA_FETCHER_README.md](DATA_FETCHER_README.md))
 - **βœ¨ NEW: Automated Scheduling** - Schedule periodic data fetching with configurable intervals (see [SCHEDULER_README.md](SCHEDULER_README.md))
+- **βœ¨ NEW: Prediction Tracking** - Save predictions, compare with results, track accuracy over time (see [PREDICTION_TRACKER_README.md](PREDICTION_TRACKER_README.md))
 - Auto-merge histories from `data/history/<game>/` (CSV/XLS/XLSX)
 - Diagnostics: frequency, recency, last-digits, pairs heatmap, odd/even
 - Modeling: EWMA, BMA, adaptive luck/unluck, optional ML
@@ -110,7 +111,30 @@ python src/lottery_scheduler.py --status
 # See full documentation
 cat SCHEDULER_README.md
 ```
-cat DATA_FETCHER_README.md
+
+### Prediction Tracking (New!)
+```bash
+# Save a prediction for upcoming draw
+python src/prediction_tracker.py --save EUROJACKPOT \
+    --numbers "5,12,18,27,33,2,8" \
+    --draw-date "2026-01-25"
+
+# Compare predictions with actual results
+python src/prediction_tracker.py --compare EUROJACKPOT \
+    --draw-date "2026-01-25" \
+    --actual "5,12,19,27,33,2,9"
+
+# Auto-compare all pending predictions
+python src/prediction_tracker.py --auto-compare
+
+# View accuracy statistics
+python src/prediction_tracker.py --stats
+
+# View pending predictions
+python src/prediction_tracker.py --pending
+
+# See full documentation
+cat PREDICTION_TRACKER_README.md
 ```
 
 ## Data Layout
