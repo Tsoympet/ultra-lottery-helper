@@ -20,10 +20,8 @@ from pathlib import Path
 from typing import Any, Dict, Optional, TYPE_CHECKING
 
 try:  # Support both package and script execution
-    from .config import UIConfig
     from .utils import get_logger, load_json, save_json
 except ImportError:  # pragma: no cover - fallback for direct execution
-    from config import UIConfig  # type: ignore
     from utils import get_logger, load_json, save_json  # type: ignore
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -350,10 +348,10 @@ def start_dashboard_server(
     host: str = "0.0.0.0",
     port: int = DEFAULT_PORT,
     scheduler: Optional["LotteryScheduler"] = None,
-    data_root: Optional[str] = None,
+    data_root: Optional[Path] = None,
 ) -> ThreadingHTTPServer:
     """Start the dashboard server in a background thread."""
-    state = DashboardState(scheduler=scheduler, data_root=Path(data_root) if data_root else None)
+    state = DashboardState(scheduler=scheduler, data_root=data_root)
     server = ThreadingHTTPServer((host, port), build_handler(state))
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
@@ -382,11 +380,12 @@ def main():
         except Exception as exc:  # pragma: no cover - runtime convenience
             LOGGER.warning("Scheduler unavailable: %s", exc)
 
+    data_root = Path(args.data_root) if args.data_root else None
     server = start_dashboard_server(
         host=args.host,
         port=args.port,
         scheduler=scheduler,
-        data_root=args.data_root,
+        data_root=data_root,
     )
 
     try:

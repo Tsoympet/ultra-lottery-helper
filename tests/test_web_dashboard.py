@@ -1,18 +1,10 @@
 import tempfile
 from pathlib import Path
-import importlib.util
 import sys
 
-MODULE_PATH = Path(__file__).resolve().parent.parent / "src" / "web_dashboard.py"
-sys.path.insert(0, str(MODULE_PATH.parent))
-spec = importlib.util.spec_from_file_location("web_dashboard", MODULE_PATH)
-web_dashboard = importlib.util.module_from_spec(spec)
-assert spec and spec.loader
-spec.loader.exec_module(web_dashboard)  # type: ignore
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-DashboardState = web_dashboard.DashboardState
-MetricsCollector = web_dashboard.MetricsCollector
-NotificationManager = web_dashboard.NotificationManager
+from src.web_dashboard import DashboardState, MetricsCollector, NotificationManager
 
 
 class FakeScheduler:
