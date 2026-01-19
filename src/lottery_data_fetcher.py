@@ -5,13 +5,14 @@ Automated Lottery Data Fetcher - Live Feed Module
 Fetches latest draw results from official lottery sources and stores them locally.
 """
 
-import json
 import os
 import sys
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
+import concurrent.futures
+import requests
 
 import pandas as pd
 
@@ -28,6 +29,7 @@ try:
         fetch_online_history,
     )
     from src.utils import get_logger, load_json, save_json
+    from src.web_dashboard import NotificationManager
     CORE_AVAILABLE = True
 except ImportError:
     CORE_AVAILABLE = False
@@ -35,6 +37,32 @@ except ImportError:
     # Fallback
     import logging
     get_logger = lambda name: logging.getLogger(name)
+    try:
+        from ultra_lottery_helper import (  # type: ignore
+            DATA_ROOT,
+            GAMES,
+            LOTTERY_METADATA,
+            _game_path,
+            fetch_online_history,
+        )
+        from utils import load_json, save_json  # type: ignore
+        try:
+            from web_dashboard import NotificationManager  # type: ignore
+        except Exception:
+            NotificationManager = None  # type: ignore
+    except Exception:
+        DATA_ROOT = os.path.join(Path(__file__).parent, "data", "history")
+        GAMES = {}
+        LOTTERY_METADATA = {}
+        def _game_path(game: str) -> str:
+            return os.path.join(DATA_ROOT, game.lower())
+        def fetch_online_history(game: str):
+            return pd.DataFrame(), "Core unavailable"
+        def load_json(path, default=None, logger=None):
+            return default or {}
+        def save_json(path, data, atomic=True, logger=None):
+            return None
+    NotificationManager = None  # type: ignore
 
 logger = get_logger('lottery_data_fetcher')
 
@@ -45,11 +73,27 @@ class LotteryDataFetcher:
     Supports live feed updates and local storage.
     """
     
-    def __init__(self, data_root: str = None):
+    def __init__(
+        self,
+        data_root: str = None,
+        alert_email: Optional[str] = None,
+        webhook_urls: Optional[Union[str, List[str]]] = None,
+        notification_manager: Optional["NotificationManager"] = None,
+        max_workers: int = 4,
+    ):
         """Initialize the data fetcher."""
         self.data_root = data_root or DATA_ROOT
         self.fetch_log_file = os.path.join(self.data_root, "fetch_log.json")
         self.fetch_log = self._load_fetch_log()
+        self.alert_email = alert_email
+        self.webhook_urls: List[str] = (
+            [webhook_urls] if isinstance(webhook_urls, str) else list(webhook_urls or [])
+        )
+        self.max_workers = max(1, max_workers)
+        self.notification_manager = notification_manager or (
+            NotificationManager(self.data_root) if NotificationManager else None
+        )
+        self._http_post = getattr(requests, "post", None)
     
     def _load_fetch_log(self) -> Dict:
         """Load the fetch log tracking when each lottery was last updated."""
@@ -58,6 +102,88 @@ class LotteryDataFetcher:
     def _save_fetch_log(self):
         """Save the fetch log with atomic write."""
         save_json(self.fetch_log_file, self.fetch_log, atomic=True, logger=logger)
+
+    def _validate_data(self, game: str, df: "pd.DataFrame") -> Tuple[bool, str]:
+        """Validate fetched data ranges and detect simple anomalies."""
+        spec = GAMES[game]
+        anomalies: List[str] = []
+
+        missing = [c for c in spec.cols if c not in df.columns]
+        if missing:
+            anomalies.append(f"Missing columns {missing}")
+
+        for col in spec.cols[: spec.main_pick]:
+            if col in df.columns:
+                if not df[col].between(1, spec.main_max, inclusive="both").all():
+                    anomalies.append(f"{col} out of range")
+        if spec.sec_pick == 1:
+            if "joker" not in df.columns:
+                anomalies.append("joker missing")
+            elif not df["joker"].between(1, spec.sec_max, inclusive="both").all():
+                anomalies.append("joker out of range")
+        elif spec.sec_pick == 2:
+            for sec_col in ("e1", "e2"):
+                if sec_col not in df.columns:
+                    anomalies.append(f"{sec_col} missing")
+                elif not df[sec_col].between(1, spec.sec_max, inclusive="both").all():
+                    anomalies.append(f"{sec_col} out of range")
+
+        if "date" not in df.columns or not df["date"].notna().all():
+            anomalies.append("date missing or null")
+
+        if all(c in df.columns for c in spec.cols):
+            if df.duplicated(subset=spec.cols, keep=False).any():
+                anomalies.append("duplicate draws detected")
+
+        return len(anomalies) == 0, "; ".join(anomalies) if anomalies else ""
+
+    def _notify_failure(self, game: str, message: str) -> None:
+        """Send an email notification when a fetch fails."""
+        if self.notification_manager and self.alert_email:
+            try:
+                self.notification_manager.send_email(
+                    self.alert_email,
+                    f"[Lottery Fetch Failure] {game}",
+                    message,
+                )
+            except Exception as exc:
+                logger.warning(f"Failed to send failure notification: {exc}")
+        elif self.alert_email:
+            log_path = Path(self.data_root) / "notifications.json"
+            entry = {
+                "channel": "email",
+                "to": self.alert_email,
+                "subject": f"[Lottery Fetch Failure] {game}",
+                "body": message,
+                "status": "logged",
+                "ts": time.time(),
+            }
+            try:
+                existing = load_json(log_path, default=[], logger=logger) if 'load_json' in globals() else []
+                existing.append(entry)
+                save_json(log_path, existing, atomic=True, logger=logger) if 'save_json' in globals() else log_path.write_text("[]")
+            except Exception as exc:  # pragma: no cover - best effort
+                logger.warning(f"Failed to persist fallback notification log: {exc}")
+
+    def _send_webhooks(self, game: str, rows: int, output_file: str) -> None:
+        """Send webhook updates after a successful fetch."""
+        if not self.webhook_urls:
+            return
+        if not self._http_post:
+            logger.debug("HTTP POST client unavailable; skipping webhook dispatch")
+            return
+        payload = {
+            "game": game,
+            "rows": rows,
+            "file": output_file,
+            "timestamp": datetime.now().isoformat(),
+            "status": "success",
+        }
+        for url in self.webhook_urls:
+            try:
+                self._http_post(url, json=payload, timeout=5)
+            except Exception as exc:
+                logger.warning(f"Webhook POST to {url} failed: {exc}")
     
     def fetch_lottery_data(self, game: str, force: bool = False) -> Tuple[bool, str]:
         """
@@ -74,7 +200,9 @@ class LotteryDataFetcher:
             ValueError: If game is unknown
         """
         if game not in GAMES:
-            raise ValueError(f"Unknown lottery: {game}")
+            msg = f"Unknown lottery: {game}"
+            logger.error(msg)
+            return False, msg
         
         # Check if we need to fetch (avoid too frequent requests)
         last_fetch = self.fetch_log.get(game, {}).get('last_fetch')
@@ -91,7 +219,14 @@ class LotteryDataFetcher:
         df, msg = fetch_online_history(game)
         
         if df.empty:
+            self._notify_failure(game, msg)
             return False, f"{game}: {msg}"
+
+        valid, anomalies = self._validate_data(game, df)
+        if not valid:
+            failure_msg = f"{game}: Anomaly detected - {anomalies}"
+            self._notify_failure(game, failure_msg)
+            return False, failure_msg
         
         # Save to CSV with timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -109,6 +244,7 @@ class LotteryDataFetcher:
             'status': 'success'
         }
         self._save_fetch_log()
+        self._send_webhooks(game, len(df), output_file)
         
         return True, f"{game}: Fetched {len(df)} draws and saved to {output_file}"
     
@@ -122,17 +258,18 @@ class LotteryDataFetcher:
         Returns:
             Dictionary mapping lottery name to (success, message) tuples
         """
-        results = {}
-        
-        for game in GAMES.keys():
-            success, msg = self.fetch_lottery_data(game, force=force)
-            results[game] = (success, msg)
-            print(msg)
-            
-            # Be respectful - add delay between requests
-            if success:
-                time.sleep(2)
-        
+        results: Dict[str, Tuple[bool, str]] = {}
+
+        def _runner(g: str):
+            return g, self.fetch_lottery_data(g, force=force)
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+            future_map = {executor.submit(_runner, game): game for game in GAMES.keys()}
+            for future in concurrent.futures.as_completed(future_map):
+                game, result = future.result()
+                results[game] = result
+                print(result[1])
+
         return results
     
     def get_fetch_status(self) -> pd.DataFrame:
