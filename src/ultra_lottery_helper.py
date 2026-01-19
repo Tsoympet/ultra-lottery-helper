@@ -347,17 +347,23 @@ def _load_all_history(game: str, use_online: bool = False) -> Tuple[pd.DataFrame
         return pd.DataFrame(), f"No valid data loaded. Issues: {', '.join(skipped)}"
 
     df = pd.concat(frames, ignore_index=True)
-    if game == "LOTTO":
+    # Sort main numbers for games with 6 main picks (no secondary numbers from main pool)
+    if spec.main_pick == 6 and spec.sec_pick == 0:
+        arr = np.sort(df[["n1","n2","n3","n4","n5","n6"]].to_numpy(), axis=1)
+        df[["n1","n2","n3","n4","n5","n6"]] = arr
+    elif spec.main_pick == 6 and spec.sec_pick > 0:
+        # Games with 6 main + separate secondary numbers
         arr = np.sort(df[["n1","n2","n3","n4","n5","n6"]].to_numpy(), axis=1)
         df[["n1","n2","n3","n4","n5","n6"]] = arr
     else:
+        # Games with 5 main picks
         arr = np.sort(df[["n1","n2","n3","n4","n5"]].to_numpy(), axis=1)
         df[["n1","n2","n3","n4","n5"]] = arr
 
     ok = np.ones(len(df), dtype=bool)
     for c in ["n1","n2","n3","n4","n5"]:
         ok &= df[c].between(1, spec.main_max, inclusive="both")
-    if spec.name == "LOTTO":
+    if spec.main_pick == 6 and "n6" in df.columns:
         ok &= df["n6"].between(1, spec.main_max, inclusive="both")
     if spec.sec_pick == 1 and "joker" in df.columns:
         ok &= df["joker"].between(1, spec.sec_max, inclusive="both")
@@ -448,7 +454,7 @@ def _luck_vectors(df: pd.DataFrame, game: str, spec: GameSpec) -> Tuple[np.ndarr
     seen_last = {i: None for i in range(1, spec.main_max+1)}
     for idx, row in df.reset_index(drop=True).iterrows():
         present = set([int(row[c]) for c in ["n1","n2","n3","n4","n5"]])
-        if spec.name == "LOTTO":
+        if spec.main_pick == 6 and "n6" in row:
             present.add(int(row["n6"]))
         for n in range(1, spec.main_max+1):
             last = seen_last[n]
@@ -468,7 +474,7 @@ def ml_probs(df: pd.DataFrame, game: str, cfg: Config, main_max: int) -> Optiona
         return None
 
     spec = GAMES[game]
-    cols = ["n1","n2","n3","n4","n5"] + (["n6"] if spec.name == "LOTTO" else [])
+    cols = ["n1","n2","n3","n4","n5"] + (["n6"] if spec.main_pick == 6 else [])
     pick_size = len(cols)
 
     # ---------- Feature engineering per row ----------
@@ -623,7 +629,7 @@ def build_probs(df: pd.DataFrame, game: str, cfg: Config) -> Tuple[np.ndarray, O
         return np.ones(spec.main_max)/spec.main_max, (np.ones(spec.sec_max)/spec.sec_max if spec.sec_pick>0 else None)
 
     main_counts = np.zeros(spec.main_max, dtype=float)
-    cols = ["n1","n2","n3","n4","n5"] + (["n6"] if spec.name=="LOTTO" else [])
+    cols = ["n1","n2","n3","n4","n5"] + (["n6"] if spec.main_pick == 6 else [])
     for _, row in df.iterrows():
         for c in cols:
             main_counts[int(row[c])-1] += 1.0
@@ -870,7 +876,7 @@ def evaluate_cv(df: pd.DataFrame, game: str, cfg: Config, folds: int = 10) -> pd
         port = dpp_select(cands, game, cfg) if cfg.optimizer=="DPP" else cands[:cfg.portfolio_size]
         t = test.iloc[0]
         spec = GAMES[game]
-        test_main = set([int(t[c]) for c in ["n1","n2","n3","n4","n5"]] + (["n6"] if spec.name=="LOTTO" else []))
+        test_main = set([int(t[c]) for c in ["n1","n2","n3","n4","n5"]] + (["n6"] if spec.main_pick == 6 else []))
         bonus = None
         if spec.sec_pick == 1 and "joker" in test.columns:
             bonus = int(t["joker"])
@@ -904,13 +910,13 @@ def self_learning_replay(df: pd.DataFrame, game: str, cfg: Config, rounds: int =
             cands, _ = generate_candidates(train, game, cfg)
             port = dpp_select(cands, game, cfg) if cfg.optimizer=="DPP" else cands[:cfg.portfolio_size]
             t = test.iloc[0]
-            tmain = set([int(t[c]) for c in ["n1","n2","n3","n4","n5"]] + (["n6"] if spec.name=="LOTTO" else []))
+            tmain = set([int(t[c]) for c in ["n1","n2","n3","n4","n5"]] + (["n6"] if spec.main_pick == 6 else []))
             bh = 0
             for m, s, _ in port:
                 bh = max(bh, len(tmain.intersection(set(m))))
             hits.append(bh)
         avg_hit = float(np.mean(hits)) if hits else 0.0
-        baseline = 1.2 if spec.name!="LOTTO" else 1.4
+        baseline = 1.2 if spec.main_pick != 6 else 1.4
         if avg_hit < baseline:
             beta = min(0.5, beta + step_beta)
             gamma = max(0.0, gamma - step_gamma)
@@ -978,7 +984,7 @@ def apply_ev_rerank(game: str, cfg: Config, portfolio: List[Tuple[List[int], obj
 def plot_frequency(df: pd.DataFrame, game: str):
     spec = GAMES[game]
     counts = np.zeros(spec.main_max, dtype=int)
-    itcols = ["n1","n2","n3","n4","n5"] + (["n6"] if spec.name=="LOTTO" else [])
+    itcols = ["n1","n2","n3","n4","n5"] + (["n6"] if spec.main_pick == 6 else [])
     for _, r in df.iterrows():
         for c in itcols:
             counts[int(r[c])-1] += 1
@@ -995,7 +1001,7 @@ def plot_recency(df: pd.DataFrame, game: str):
     for i, (_, r) in enumerate(df.iterrows()):
         for c in ["n1","n2","n3","n4","n5"]:
             last[int(r[c])-1] = i
-        if spec.name == "LOTTO":
+        if spec.main_pick == 6 and "n6" in r:
             last[int(r["n6"])-1] = i
     rec = np.where(last>=0, last, 0)
     if rec.max()>0: rec = rec / rec.max()
@@ -1009,7 +1015,7 @@ def plot_recency(df: pd.DataFrame, game: str):
 def plot_last_digit(df: pd.DataFrame, game: str):
     spec = GAMES[game]
     digs = np.zeros(10, dtype=int)
-    itcols = ["n1","n2","n3","n4","n5"] + (["n6"] if spec.name=="LOTTO" else [])
+    itcols = ["n1","n2","n3","n4","n5"] + (["n6"] if spec.main_pick == 6 else [])
     for _, r in df.iterrows():
         for c in itcols:
             digs[int(r[c]) % 10] += 1
@@ -1024,7 +1030,7 @@ def plot_pairs_heatmap(df: pd.DataFrame, game: str):
     spec = GAMES[game]
     M = spec.main_max
     mat = np.zeros((M,M), dtype=int)
-    itcols = ["n1","n2","n3","n4","n5"] + (["n6"] if spec.name=="LOTTO" else [])
+    itcols = ["n1","n2","n3","n4","n5"] + (["n6"] if spec.main_pick == 6 else [])
     for _, r in df.iterrows():
         vals = sorted([int(r[c]) for c in itcols])
         for a, b in itertools.combinations(vals, 2):
@@ -1042,7 +1048,7 @@ def plot_pairs_heatmap(df: pd.DataFrame, game: str):
 
 def plot_odd_even(df: pd.DataFrame, game: str):
     spec = GAMES[game]
-    itcols = ["n1","n2","n3","n4","n5"] + (["n6"] if spec.name=="LOTTO" else [])
+    itcols = ["n1","n2","n3","n4","n5"] + (["n6"] if spec.main_pick == 6 else [])
     odds = df[itcols].apply(lambda row: int(np.sum(np.array(row) % 2 == 1)), axis=1)
     fig = plt.figure(figsize=(6,3))
     plt.hist(odds, bins=range(0, spec.main_pick+2), color='purple', edgecolor='black', align='left')
