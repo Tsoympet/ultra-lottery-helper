@@ -12,6 +12,36 @@ Now ships as a **native desktop app (PySide6)** β€” no browser, no local se
 
 > Randomness is the sea; we chart the waves. Play responsibly.
 
+## Supported Lotteries
+
+### Greek Lotteries
+- **TZOKER** πŸ‡¬πŸ‡· - 5 numbers (1-45) + 1 Joker (1-20)
+- **LOTTO** πŸ‡¬πŸ‡· - 6 numbers (1-49)
+
+### Pan-European
+- **EuroJackpot** πŸ‡ͺπŸ‡Ί - 5 numbers (1-50) + 2 Euro numbers (1-12)
+
+### United Kingdom
+- **UK National Lottery** πŸ‡¬πŸ‡§ - 6 numbers (1-59)
+
+### Spain
+- **La Primitiva** πŸ‡ͺπŸ‡Έ - 6 numbers (1-49) + 1 bonus (0-9)
+
+### Italy
+- **SuperEnalotto** πŸ‡?πŸ‡Ή - 6 numbers (1-90)
+
+### France
+- **Loto** πŸ‡«πŸ‡· - 5 numbers (1-49) + 1 Chance (1-10)
+
+### Germany
+- **Lotto 6aus49** πŸ‡©πŸ‡ͺ - 6 numbers (1-49) + 1 Superzahl (0-9)
+
+### Austria
+- **Austrian Lotto** πŸ‡¦πŸ‡Ή - 6 numbers (1-45)
+
+### Switzerland
+- **Swiss Lotto** πŸ‡¨πŸ‡­ - 6 numbers (1-42) + 1 Lucky number (1-6)
+
 ## Features
 - Offline by default; optional online fetch
 - Auto-merge histories from `data/history/<game>/` (CSV/XLS/XLSX)
@@ -49,9 +79,14 @@ python src/ulh_desktop.py
 
 ## Data Layout
 ```
-data/history/{tzoker,lotto,eurojackpot}
-exports/{tzoker,lotto,eurojackpot}
-assets/icon.ico
+data/history/{tzoker,lotto,eurojackpot,uk_national_lottery,la_primitiva,
+              superenalotto,loto_france,lotto_6aus49,austrian_lotto,swiss_lotto}
+exports/{tzoker,lotto,eurojackpot,uk_national_lottery,la_primitiva,
+         superenalotto,loto_france,lotto_6aus49,austrian_lotto,swiss_lotto}
+assets/
+  β"œβ"€β"€ flags/          # Country flags for each lottery
+  β"œβ"€β"€ lottery_icons/  # Official lottery icons
+  └── icon.ico        # Main app icon
 ```
 
 ## Local Build (Windows)

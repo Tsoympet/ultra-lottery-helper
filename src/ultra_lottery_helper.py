@@ -140,12 +140,112 @@ GAMES: Dict[str, GameSpec] = {
     "TZOKER": GameSpec("TZOKER", 5, 45, 1, 20, ["n1","n2","n3","n4","n5","joker"]),
     "LOTTO":  GameSpec("LOTTO",  6, 49, 0,  0, ["n1","n2","n3","n4","n5","n6"]),
     "EUROJACKPOT": GameSpec("EUROJACKPOT", 5, 50, 2, 12, ["n1","n2","n3","n4","n5","e1","e2"]),
+    # European Lotteries
+    "UK_NATIONAL_LOTTERY": GameSpec("UK_NATIONAL_LOTTERY", 6, 59, 0, 0, ["n1","n2","n3","n4","n5","n6"]),
+    "LA_PRIMITIVA": GameSpec("LA_PRIMITIVA", 6, 49, 1, 9, ["n1","n2","n3","n4","n5","n6","bonus"]),
+    "SUPERENALOTTO": GameSpec("SUPERENALOTTO", 6, 90, 0, 0, ["n1","n2","n3","n4","n5","n6"]),
+    "LOTO_FRANCE": GameSpec("LOTO_FRANCE", 5, 49, 1, 10, ["n1","n2","n3","n4","n5","chance"]),
+    "LOTTO_6AUS49": GameSpec("LOTTO_6AUS49", 6, 49, 1, 10, ["n1","n2","n3","n4","n5","n6","super"]),
+    "AUSTRIAN_LOTTO": GameSpec("AUSTRIAN_LOTTO", 6, 45, 0, 0, ["n1","n2","n3","n4","n5","n6"]),
+    "SWISS_LOTTO": GameSpec("SWISS_LOTTO", 6, 42, 1, 6, ["n1","n2","n3","n4","n5","n6","lucky"]),
 }
 
 OPAP_TICKET_PRICE_DEFAULTS = {
     "TZOKER":      0.50,
     "LOTTO":       0.50,
     "EUROJACKPOT": 2.00,
+    # European Lotteries (approximate prices in EUR)
+    "UK_NATIONAL_LOTTERY": 2.00,  # Β£2.00
+    "LA_PRIMITIVA": 1.00,
+    "SUPERENALOTTO": 1.00,
+    "LOTO_FRANCE": 2.20,
+    "LOTTO_6AUS49": 1.20,
+    "AUSTRIAN_LOTTO": 1.20,
+    "SWISS_LOTTO": 2.50,  # CHF 2.50
+}
+
+# Lottery metadata: country, flag, icon, description
+LOTTERY_METADATA = {
+    "TZOKER": {
+        "country": "Greece",
+        "flag": "greece.png",
+        "icon": "tzoker.png",
+        "display_name": "TZOKER",
+        "description": "Greek lottery - 5 main numbers (1-45) + 1 Joker (1-20)",
+        "official_url": "https://www.opap.gr/en/web/opap-gr/tzoker",
+    },
+    "LOTTO": {
+        "country": "Greece",
+        "flag": "greece.png",
+        "icon": "lotto_greece.png",
+        "display_name": "Greek LOTTO",
+        "description": "Greek lottery - 6 numbers (1-49)",
+        "official_url": "https://www.opap.gr/en/web/opap-gr/lotto",
+    },
+    "EUROJACKPOT": {
+        "country": "European Union",
+        "flag": "european_union.png",
+        "icon": "eurojackpot.png",
+        "display_name": "EuroJackpot",
+        "description": "Pan-European lottery - 5 main numbers (1-50) + 2 Euro numbers (1-12)",
+        "official_url": "https://www.eurojackpot.org",
+    },
+    "UK_NATIONAL_LOTTERY": {
+        "country": "United Kingdom",
+        "flag": "uk.png",
+        "icon": "uk_national_lottery.png",
+        "display_name": "UK National Lottery",
+        "description": "UK Lotto - 6 numbers (1-59)",
+        "official_url": "https://www.national-lottery.co.uk",
+    },
+    "LA_PRIMITIVA": {
+        "country": "Spain",
+        "flag": "spain.png",
+        "icon": "la_primitiva.png",
+        "display_name": "La Primitiva",
+        "description": "Spanish lottery - 6 numbers (1-49) + 1 bonus (0-9)",
+        "official_url": "https://www.loteriasyapuestas.es/en/la-primitiva",
+    },
+    "SUPERENALOTTO": {
+        "country": "Italy",
+        "flag": "italy.png",
+        "icon": "superenalotto.png",
+        "display_name": "SuperEnalotto",
+        "description": "Italian lottery - 6 numbers (1-90)",
+        "official_url": "https://www.superenalotto.com",
+    },
+    "LOTO_FRANCE": {
+        "country": "France",
+        "flag": "france.png",
+        "icon": "loto_france.png",
+        "display_name": "Loto (France)",
+        "description": "French lottery - 5 numbers (1-49) + 1 Chance (1-10)",
+        "official_url": "https://www.fdj.fr/jeux-de-tirage/loto",
+    },
+    "LOTTO_6AUS49": {
+        "country": "Germany",
+        "flag": "germany.png",
+        "icon": "lotto_6aus49.png",
+        "display_name": "Lotto 6aus49",
+        "description": "German lottery - 6 numbers (1-49) + 1 Superzahl (0-9)",
+        "official_url": "https://www.lotto.de/lotto-6aus49",
+    },
+    "AUSTRIAN_LOTTO": {
+        "country": "Austria",
+        "flag": "austria.png",
+        "icon": "austrian_lotto.png",
+        "display_name": "Austrian Lotto",
+        "description": "Austrian lottery - 6 numbers (1-45)",
+        "official_url": "https://www.win2day.at/lottery/lotto",
+    },
+    "SWISS_LOTTO": {
+        "country": "Switzerland",
+        "flag": "switzerland.png",
+        "icon": "swiss_lotto.png",
+        "display_name": "Swiss Lotto",
+        "description": "Swiss lottery - 6 numbers (1-42) + 1 Lucky number (1-6)",
+        "official_url": "https://www.swisslos.ch/en/swisslotto",
+    },
 }
 
 def _game_path(game: str) -> str:
@@ -159,7 +259,15 @@ def fetch_online_history(game: str) -> Tuple[pd.DataFrame, str]:
     urls = {
         "TZOKER": "https://www.opap.gr/en/web/opap-gr/tzoker-draw-results",
         "LOTTO": "https://www.opap.gr/en/web/opap-gr/lotto-draw-results",
-        "EUROJACKPOT": "https://www.eurojackpot.org/en/results/"
+        "EUROJACKPOT": "https://www.eurojackpot.org/en/results/",
+        # European Lotteries - placeholder URLs (would need actual scraping logic)
+        "UK_NATIONAL_LOTTERY": "https://www.national-lottery.co.uk/results/lotto/draw-history",
+        "LA_PRIMITIVA": "https://www.loteriasyapuestas.es/en/la-primitiva",
+        "SUPERENALOTTO": "https://www.superenalotto.com/en/results",
+        "LOTO_FRANCE": "https://www.fdj.fr/jeux-de-tirage/loto",
+        "LOTTO_6AUS49": "https://www.lotto.de/lotto-6aus49/lottozahlen",
+        "AUSTRIAN_LOTTO": "https://www.win2day.at/lottery/lotto",
+        "SWISS_LOTTO": "https://www.swisslos.ch/en/swisslotto/information/winning-numbers.html",
     }
     try:
         response = requests.get(urls[game], timeout=10)

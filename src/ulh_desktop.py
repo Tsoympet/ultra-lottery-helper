@@ -96,7 +96,11 @@ class MainWindow(QMainWindow):
         
         lay.addWidget(QLabel("Select Game:"))
         self.game_combo = QComboBox()
-        self.game_combo.addItems(["TZOKER", "LOTTO", "EUROJACKPOT"])
+        self.game_combo.addItems([
+            "TZOKER", "LOTTO", "EUROJACKPOT",
+            "UK_NATIONAL_LOTTERY", "LA_PRIMITIVA", "SUPERENALOTTO",
+            "LOTO_FRANCE", "LOTTO_6AUS49", "AUSTRIAN_LOTTO", "SWISS_LOTTO"
+        ])
         lay.addWidget(self.game_combo)
         lay.addStretch()
         
