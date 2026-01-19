@@ -28,13 +28,13 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           pip install pytest
-          python - << 'PY'
-          import importlib, sys, subprocess
-          try:
-              importlib.import_module("PySide6")
-          except Exception:
-              subprocess.check_call([sys.executable, "-m", "pip", "install", "PySide6"])
-          PY
+          python - <<'PY'
+import importlib, sys, subprocess
+try:
+    importlib.import_module("PySide6")
+except Exception:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "PySide6"])
+PY
 
       - name: Install Qt/GL runtime libs (headless)
         run: |
@@ -47,6 +47,11 @@ jobs:
       - name: Byte-compile sources
         run: |
           if [ -d src ]; then
+            python - <<'PY'
+import compileall, sys
+ok = compileall.compile_dir('src', maxlevels=10, force=True, quiet=1)
+sys.exit(0 if ok else 1)
+PY
             python - << 'PY'
             import compileall, sys
             ok = compileall.compile_dir('src', maxlevels=10, force=True, quiet=1)
@@ -59,14 +64,14 @@ jobs:
           QT_QPA_PLATFORM: offscreen
         run: |
           python - <<'PY'
-          import os, sys
-          os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-          import PySide6.QtWidgets as qw
-          print("Qt import OK:", qw)
-          sys.path.append('src')
-          import ulh_desktop as app
-          print("Desktop module:", app.__name__)
-          PY
+import os, sys
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+import PySide6.QtWidgets as qw
+print("Qt import OK:", qw)
+sys.path.append('src')
+import ulh_desktop as app
+print("Desktop module:", app.__name__)
+PY
 
       - name: Run pytest
         env:
@@ -164,17 +169,22 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           pip install pytest
-          python - << 'PY'
-          import importlib, sys, subprocess
-          try:
-              importlib.import_module("PySide6")
-          except Exception:
-              subprocess.check_call([sys.executable, "-m", "pip", "install", "PySide6"])
-          PY
+          python - <<'PY'
+import importlib, sys, subprocess
+try:
+    importlib.import_module("PySide6")
+except Exception:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "PySide6"])
+PY
 
       - name: Byte-compile sources
         run: |
           if [ -d src ]; then
+            python - <<'PY'
+import compileall, sys
+ok = compileall.compile_dir('src', maxlevels=10, force=True, quiet=1)
+sys.exit(0 if ok else 1)
+PY
             python - << 'PY'
             import compileall, sys
             ok = compileall.compile_dir('src', maxlevels=10, force=True, quiet=1)
@@ -187,14 +197,14 @@ jobs:
           QT_QPA_PLATFORM: offscreen
         run: |
           python - <<'PY'
-          import os, sys
-          os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-          import PySide6.QtWidgets as qw
-          print("Qt import OK:", qw)
-          sys.path.append('src')
-          import ulh_desktop as app
-          print("Desktop module:", app.__name__)
-          PY
+import os, sys
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+import PySide6.QtWidgets as qw
+print("Qt import OK:", qw)
+sys.path.append('src')
+import ulh_desktop as app
+print("Desktop module:", app.__name__)
+PY
 
       - name: Run pytest
         env:
