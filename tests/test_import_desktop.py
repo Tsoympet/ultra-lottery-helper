@@ -17,7 +17,7 @@ def _ensure_egl_runtime():
     Best-effort helper to make EGL runtime available for PySide6 imports in headless
     environments. It only attempts installation when ULH_AUTO_INSTALL_EGL is set and may
     run privileged package installs; enable only in trusted CI environments with
-    controlled sudo configuration.
+    controlled sudo configuration (ULH_AUTO_INSTALL_EGL=ci-sudo-ok).
     """
     if ctypes.util.find_library("EGL"):
         return
@@ -45,8 +45,11 @@ def _ensure_egl_runtime():
             stderr=subprocess.DEVNULL,
             timeout=60,
         )
-    except (subprocess.TimeoutExpired, subprocess.SubprocessError, PermissionError, FileNotFoundError):
+    except (subprocess.TimeoutExpired, subprocess.SubprocessError, PermissionError):
         warnings.warn("Automatic libegl1/libgl1 installation failed; install manually if needed.")
+        return
+    except FileNotFoundError:
+        warnings.warn("Package manager binaries not found; install libegl1/libgl1 manually.")
         return
     if ctypes.util.find_library("EGL") is None:
         warnings.warn("libEGL installation attempt failed; ensure libegl1/libgl1 are installed.")
@@ -65,7 +68,7 @@ def test_import_ulh_desktop_offscreen():
     _ensure_egl_runtime()
     if ctypes.util.find_library("EGL") is None:
         pytest.skip(
-            "libEGL runtime missing; install libegl1/libgl1 or set ULH_AUTO_INSTALL_EGL=1"
+            "libEGL runtime missing; install libegl1/libgl1 or set ULH_AUTO_INSTALL_EGL=ci-sudo-ok in CI"
         )
     pytest.importorskip("PySide6.QtWidgets")
     os.environ.setdefault("QT_QPA_PLATFORM", "minimal")
