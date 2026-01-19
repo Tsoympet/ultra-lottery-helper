@@ -145,18 +145,59 @@ if game not in GAMES:
 
 ## Recommendations for Ongoing Security
 
-### Implemented
+### Implemented βœ…
 - [x] Pre-commit hooks with security linters
 - [x] Centralized security configuration
 - [x] Comprehensive error handling
 - [x] Input validation throughout
+- [x] **Rate limiting for network requests** βœ… NEW
+- [x] **Request retry with exponential backoff** βœ… NEW
+- [x] **JSON Schema validation support** βœ… NEW
+- [x] **Security headers for future web interfaces** βœ… NEW
+- [x] **Automated dependency vulnerability scanning** βœ… NEW
 
-### Future Enhancements
-- [ ] Add rate limiting for network requests
-- [ ] Implement request retry with exponential backoff
-- [ ] Add data validation schemas (e.g., JSON Schema)
-- [ ] Consider adding security headers for any future web interfaces
-- [ ] Regular dependency vulnerability scanning (e.g., `safety check`)
+### Advanced Security Features
+
+#### Rate Limiting
+- Token bucket algorithm implementation
+- Configurable requests per time window
+- Automatic waiting when limit reached
+- See `src/utils.py::RateLimiter` and `SECURITY_FEATURES.md`
+
+#### Retry with Exponential Backoff
+- Automatic retry for transient failures
+- Exponential backoff prevents overwhelming services
+- Configurable max retries and backoff multiplier
+- Integrated into `fetch_online_history()` function
+- See `src/utils.py::retry_with_backoff` and `SECURITY_FEATURES.md`
+
+#### JSON Schema Validation
+- Validate data against predefined schemas
+- Predefined schemas for lottery draws and predictions
+- Support for custom schema definitions
+- Optional dependency (requires `jsonschema` package)
+- See `src/utils.py::validate_json_schema` and `SECURITY_FEATURES.md`
+
+#### Security Headers
+- Pre-configured for future web interfaces
+- Includes X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, HSTS
+- Ready to apply to any Flask/FastAPI application
+- See `src/config.py::NetworkConfig.SECURITY_HEADERS`
+
+#### Dependency Scanning
+- Manual script: `scripts/check_dependencies.py`
+- Automated GitHub Actions workflow (weekly + on changes)
+- Uses Safety database for vulnerability detection
+- Scans both main and dev dependencies
+- See `.github/workflows/dependency-scan.yml` and `SECURITY_FEATURES.md`
+
+### Documentation
+Comprehensive documentation added in **SECURITY_FEATURES.md** covering:
+- Implementation details for each feature
+- Configuration options
+- Usage examples
+- Best practices
+- Troubleshooting guide
 
 ## Compliance
 

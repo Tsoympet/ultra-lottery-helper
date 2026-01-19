@@ -365,7 +365,7 @@ def _game_path(game: str) -> str:
 
 def fetch_online_history(game: str) -> Tuple[pd.DataFrame, str]:
     """
-    Fetch lottery draw history from online sources.
+    Fetch lottery draw history from online sources with retry logic.
     
     Args:
         game: Game identifier (must be in GAMES)
@@ -373,6 +373,8 @@ def fetch_online_history(game: str) -> Tuple[pd.DataFrame, str]:
     Returns:
         Tuple of (DataFrame with draw history, status message)
     """
+    from .utils import retry_with_backoff, RateLimiter
+    
     urls = {
         "TZOKER": "https://www.opap.gr/en/web/opap-gr/tzoker-draw-results",
         "LOTTO": "https://www.opap.gr/en/web/opap-gr/lotto-draw-results",
@@ -394,7 +396,22 @@ def fetch_online_history(game: str) -> Tuple[pd.DataFrame, str]:
     
     url = urls[game]
     
-    try:
+    # Rate limiter (shared across all fetch calls)
+    if not hasattr(fetch_online_history, '_rate_limiter'):
+        if NetworkConfig.RATE_LIMIT_ENABLED:
+            fetch_online_history._rate_limiter = RateLimiter(
+                NetworkConfig.RATE_LIMIT_REQUESTS,
+                NetworkConfig.RATE_LIMIT_WINDOW
+            )
+        else:
+            fetch_online_history._rate_limiter = None
+    
+    # Apply rate limiting
+    if fetch_online_history._rate_limiter:
+        fetch_online_history._rate_limiter.wait_if_needed()
+    
+    def _fetch():
+        """Inner function to fetch data (will be retried)."""
         # Use proper timeout and SSL verification
         response = requests.get(
             url,
@@ -402,6 +419,19 @@ def fetch_online_history(game: str) -> Tuple[pd.DataFrame, str]:
             verify=NetworkConfig.VERIFY_SSL
         )
         response.raise_for_status()
+        return response
+    
+    try:
+        # Retry the fetch with exponential backoff
+        fetch_with_retry = retry_with_backoff(
+            _fetch,
+            max_retries=NetworkConfig.MAX_RETRIES,
+            initial_delay=NetworkConfig.INITIAL_RETRY_DELAY,
+            backoff_multiplier=NetworkConfig.RETRY_BACKOFF,
+            exceptions=(requests.exceptions.RequestException,),
+            logger=logger
+        )
+        response = fetch_with_retry()
         
         # Parse HTML tables
         tables = pd.read_html(response.text)

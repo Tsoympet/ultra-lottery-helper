@@ -12,8 +12,10 @@ Provides common utilities for:
 
 import json
 import logging
+import time
+from collections import deque
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Callable, Dict, Optional, TypeVar, Union
 
 
 # =============================================================================
@@ -207,3 +209,192 @@ def ensure_path_exists(path: Union[str, Path], is_file: bool = False) -> Path:
         path.mkdir(parents=True, exist_ok=True)
         
     return path
+
+
+# =============================================================================
+# Network Utilities
+# =============================================================================
+
+import time
+from collections import deque
+from typing import Callable, TypeVar
+
+T = TypeVar('T')
+
+
+class RateLimiter:
+    """
+    Rate limiter using token bucket algorithm.
+    
+    Limits the number of operations within a time window.
+    """
+    
+    def __init__(self, max_requests: int, window_seconds: float):
+        """
+        Initialize rate limiter.
+        
+        Args:
+            max_requests: Maximum number of requests allowed in the time window
+            window_seconds: Time window in seconds
+        """
+        self.max_requests = max_requests
+        self.window_seconds = window_seconds
+        self.requests = deque()
+        
+    def wait_if_needed(self) -> None:
+        """Wait if rate limit would be exceeded."""
+        now = time.time()
+        
+        # Remove old requests outside the window
+        while self.requests and self.requests[0] < now - self.window_seconds:
+            self.requests.popleft()
+        
+        # If at limit, wait until oldest request expires
+        if len(self.requests) >= self.max_requests:
+            sleep_time = self.requests[0] + self.window_seconds - now
+            if sleep_time > 0:
+                time.sleep(sleep_time)
+                # Clean up after waiting
+                while self.requests and self.requests[0] < time.time() - self.window_seconds:
+                    self.requests.popleft()
+        
+        # Record this request
+        self.requests.append(time.time())
+
+
+def retry_with_backoff(
+    func: Callable[..., T],
+    max_retries: int = 3,
+    initial_delay: float = 1.0,
+    backoff_multiplier: float = 2.0,
+    exceptions: tuple = (Exception,),
+    logger: Optional[logging.Logger] = None
+) -> Callable[..., T]:
+    """
+    Decorator to retry a function with exponential backoff.
+    
+    Args:
+        func: Function to retry
+        max_retries: Maximum number of retry attempts
+        initial_delay: Initial delay in seconds before first retry
+        backoff_multiplier: Multiplier for exponential backoff
+        exceptions: Tuple of exceptions to catch and retry
+        logger: Optional logger for retry notifications
+        
+    Returns:
+        Wrapped function with retry logic
+    """
+    def wrapper(*args, **kwargs) -> T:
+        delay = initial_delay
+        last_exception = None
+        
+        for attempt in range(max_retries + 1):
+            try:
+                return func(*args, **kwargs)
+            except exceptions as e:
+                last_exception = e
+                
+                if attempt < max_retries:
+                    if logger:
+                        logger.warning(
+                            f"Attempt {attempt + 1}/{max_retries + 1} failed: {e}. "
+                            f"Retrying in {delay:.1f}s..."
+                        )
+                    time.sleep(delay)
+                    delay *= backoff_multiplier
+                else:
+                    if logger:
+                        logger.error(f"All {max_retries + 1} attempts failed")
+        
+        # If we get here, all retries failed
+        raise last_exception
+    
+    return wrapper
+
+
+# =============================================================================
+# Data Validation with JSON Schema
+# =============================================================================
+
+# Try to import jsonschema, but make it optional
+try:
+    import jsonschema
+    JSONSCHEMA_AVAILABLE = True
+except ImportError:
+    JSONSCHEMA_AVAILABLE = False
+
+
+def validate_json_schema(
+    data: Any,
+    schema: Dict[str, Any],
+    logger: Optional[logging.Logger] = None
+) -> bool:
+    """
+    Validate data against a JSON Schema.
+    
+    Args:
+        data: Data to validate
+        schema: JSON Schema definition
+        logger: Optional logger for validation errors
+        
+    Returns:
+        True if valid, False otherwise
+        
+    Raises:
+        ImportError: If jsonschema library is not installed
+    """
+    if not JSONSCHEMA_AVAILABLE:
+        raise ImportError(
+            "jsonschema library not installed. "
+            "Install with: pip install jsonschema"
+        )
+    
+    try:
+        jsonschema.validate(instance=data, schema=schema)
+        return True
+    except jsonschema.ValidationError as e:
+        if logger:
+            logger.error(f"JSON schema validation failed: {e.message}")
+            if e.path:
+                logger.error(f"Path: {'.'.join(str(p) for p in e.path)}")
+        return False
+    except jsonschema.SchemaError as e:
+        if logger:
+            logger.error(f"Invalid schema: {e.message}")
+        return False
+
+
+# Common JSON schemas for lottery data
+LOTTERY_DRAW_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "date": {"type": "string", "format": "date"},
+        "n1": {"type": "integer", "minimum": 1},
+        "n2": {"type": "integer", "minimum": 1},
+        "n3": {"type": "integer", "minimum": 1},
+        "n4": {"type": "integer", "minimum": 1},
+        "n5": {"type": "integer", "minimum": 1},
+        "n6": {"type": "integer", "minimum": 1},
+        "e1": {"type": "integer", "minimum": 1},
+        "e2": {"type": "integer", "minimum": 1},
+        "joker": {"type": "integer", "minimum": 1}
+    },
+    "required": ["date"]
+}
+
+PREDICTION_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "game": {"type": "string", "minLength": 1},
+        "draw_date": {"type": "string", "format": "date"},
+        "numbers": {
+            "type": "array",
+            "items": {"type": "integer", "minimum": 1}
+        },
+        "secondary_numbers": {
+            "type": "array",
+            "items": {"type": "integer", "minimum": 1}
+        }
+    },
+    "required": ["game", "numbers"]
+}

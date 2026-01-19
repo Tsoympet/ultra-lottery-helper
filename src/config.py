@@ -55,6 +55,20 @@ class NetworkConfig:
     VERIFY_SSL = True  # Verify SSL certificates
     MAX_RETRIES = 3  # Maximum number of retry attempts
     RETRY_BACKOFF = 2.0  # Exponential backoff multiplier
+    INITIAL_RETRY_DELAY = 1.0  # Initial delay in seconds before first retry
+    
+    # Rate limiting
+    RATE_LIMIT_ENABLED = True  # Enable rate limiting
+    RATE_LIMIT_REQUESTS = 10  # Maximum requests per time window
+    RATE_LIMIT_WINDOW = 60  # Time window in seconds
+    
+    # Security headers for future web interfaces
+    SECURITY_HEADERS = {
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY',
+        'X-XSS-Protection': '1; mode=block',
+        'Strict-Transport-Security': 'max-age=31536000; includeSubDomains'
+    }
 
 
 # =============================================================================
