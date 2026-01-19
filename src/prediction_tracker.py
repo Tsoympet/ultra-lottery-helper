@@ -5,15 +5,15 @@ Lottery Prediction Tracker - Prediction Comparison and Validation System
 Tracks predictions, compares with actual results, and provides accuracy metrics.
 """
 
+import logging
 import os
 import sys
-import json
-import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Tuple, Optional, Set
 from pathlib import Path
-import pandas as pd
+from typing import Dict, List, Optional, Set, Tuple
+
 import numpy as np
+import pandas as pd
 
 # Add src to path if needed
 if os.path.dirname(__file__) not in sys.path:
@@ -21,19 +21,34 @@ if os.path.dirname(__file__) not in sys.path:
 
 try:
     from src.ultra_lottery_helper import GAMES, LOTTERY_METADATA, _load_all_history
+    from src.utils import get_logger, load_json, save_json
     CORE_AVAILABLE = True
 except ImportError as e:
     CORE_AVAILABLE = False
     GAMES = {}
     LOTTERY_METADATA = {}
     print(f"Warning: Core modules not available: {e}")
+    # Fallback logging setup
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    get_logger = lambda name: logging.getLogger(name)
+    # Simple fallback implementations
+    def load_json(path, default=None, logger=None):
+        import json
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except:
+            return default
+    def save_json(path, data, atomic=True, logger=None):
+        import json
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2)
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger('prediction_tracker')
+logger = get_logger('prediction_tracker')
 
 
 class PredictionTracker:
@@ -56,46 +71,20 @@ class PredictionTracker:
         self.results = self._load_results()
     
     def _load_predictions(self) -> Dict:
-        """Load saved predictions."""
-        if os.path.exists(self.predictions_file):
-            try:
-                with open(self.predictions_file, 'r') as f:
-                    return json.load(f)
-            except Exception as e:
-                logger.error(f"Error loading predictions: {e}")
-                return {}
-        return {}
+        """Load saved predictions from file."""
+        return load_json(self.predictions_file, default={}, logger=logger)
     
     def _save_predictions(self):
-        """Save predictions to file."""
-        os.makedirs(os.path.dirname(self.predictions_file), exist_ok=True)
-        try:
-            with open(self.predictions_file, 'w') as f:
-                json.dump(self.predictions, f, indent=2)
-            logger.info(f"Predictions saved to {self.predictions_file}")
-        except Exception as e:
-            logger.error(f"Error saving predictions: {e}")
+        """Save predictions to file with atomic write."""
+        save_json(self.predictions_file, self.predictions, atomic=True, logger=logger)
     
     def _load_results(self) -> Dict:
-        """Load prediction results."""
-        if os.path.exists(self.results_file):
-            try:
-                with open(self.results_file, 'r') as f:
-                    return json.load(f)
-            except Exception as e:
-                logger.error(f"Error loading results: {e}")
-                return {}
-        return {}
+        """Load prediction results from file."""
+        return load_json(self.results_file, default={}, logger=logger)
     
     def _save_results(self):
-        """Save prediction results to file."""
-        os.makedirs(os.path.dirname(self.results_file), exist_ok=True)
-        try:
-            with open(self.results_file, 'w') as f:
-                json.dump(self.results, f, indent=2)
-            logger.info(f"Results saved to {self.results_file}")
-        except Exception as e:
-            logger.error(f"Error saving results: {e}")
+        """Save prediction results to file with atomic write."""
+        save_json(self.results_file, self.results, atomic=True, logger=logger)
     
     def save_prediction(self, game: str, draw_date: str, 
                        predicted_numbers: List[int], 

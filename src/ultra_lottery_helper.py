@@ -23,20 +23,29 @@ try:
 except (ImportError, ValueError):
     __version__ = "6.3.0"
 
-import os
-import math
 import glob
+import hashlib
 import itertools
 import json
+import logging
+import math
+import os
 import textwrap
-import hashlib
 from dataclasses import dataclass
-from typing import Optional, Dict, List, Tuple
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
 import multiprocessing as mp
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+
+# Local utilities
+from .config import AlgorithmConfig, NetworkConfig
+from .utils import get_logger
+
+# Setup logging
+logger = get_logger(__name__)
 
 # Optional ML libraries (safe imports)
 try:
@@ -79,10 +88,11 @@ import requests
 # =============================================================================
 
 def _in_colab() -> bool:
+    """Check if running in Google Colab environment."""
     try:
         import google.colab  # type: ignore
         return True
-    except Exception:
+    except ImportError:
         return False
 
 # Colab-compatible paths
@@ -351,6 +361,15 @@ def _game_path(game: str) -> str:
 # =============================================================================
 
 def fetch_online_history(game: str) -> Tuple[pd.DataFrame, str]:
+    """
+    Fetch lottery draw history from online sources.
+    
+    Args:
+        game: Game identifier (must be in GAMES)
+        
+    Returns:
+        Tuple of (DataFrame with draw history, status message)
+    """
     urls = {
         "TZOKER": "https://www.opap.gr/en/web/opap-gr/tzoker-draw-results",
         "LOTTO": "https://www.opap.gr/en/web/opap-gr/lotto-draw-results",
@@ -364,31 +383,82 @@ def fetch_online_history(game: str) -> Tuple[pd.DataFrame, str]:
         "AUSTRIAN_LOTTO": "https://www.win2day.at/lottery/lotto",
         "SWISS_LOTTO": "https://www.swisslos.ch/en/swisslotto/information/winning-numbers.html",
     }
+    
+    if game not in urls:
+        msg = f"No online source configured for {game}"
+        logger.warning(msg)
+        return pd.DataFrame(), msg
+    
+    url = urls[game]
+    
     try:
-        response = requests.get(urls[game], timeout=10)
+        # Use proper timeout and SSL verification
+        response = requests.get(
+            url,
+            timeout=NetworkConfig.REQUEST_TIMEOUT,
+            verify=NetworkConfig.VERIFY_SSL
+        )
         response.raise_for_status()
+        
+        # Parse HTML tables
         tables = pd.read_html(response.text)
         if not tables:
-            return pd.DataFrame(), f"No HTML tables found for {game} online."
+            msg = f"No HTML tables found for {game} at {url}"
+            logger.warning(msg)
+            return pd.DataFrame(), msg
+            
         df = tables[0]
         df.columns = [str(c).strip().lower() for c in df.columns]
+        
         spec = GAMES[game]
         needed = spec.cols
         col_map = {}
+        
         for col in needed + ["date"]:
             cand = [c for c in df.columns if col in c]
             col_map[col] = cand[0] if cand else None
+            
         missing = [k for k in needed if col_map.get(k) is None]
         if missing:
-            return pd.DataFrame(), f"Online data missing columns: {missing}"
+            msg = f"Online data missing columns: {missing}"
+            logger.error(msg)
+            return pd.DataFrame(), msg
+            
         out = pd.DataFrame({k: pd.to_numeric(df[col_map[k]], errors="coerce") for k in needed})
         out["date"] = pd.to_datetime(df[col_map["date"]], errors="coerce") if col_map.get("date") else pd.NaT
         out = out.dropna(how="any")
+        
         for k in needed:
             out[k] = out[k].astype(int, errors="ignore")
-        return out, f"Fetched {len(out)} draws from {urls[game]}"
+            
+        msg = f"Fetched {len(out)} draws from {url}"
+        logger.info(msg)
+        return out, msg
+        
+    except requests.exceptions.Timeout:
+        msg = f"Request timeout after {NetworkConfig.REQUEST_TIMEOUT}s for {game}"
+        logger.error(msg)
+        return pd.DataFrame(), msg
+        
+    except requests.exceptions.SSLError as e:
+        msg = f"SSL verification failed for {game}: {e}"
+        logger.error(msg)
+        return pd.DataFrame(), msg
+        
+    except requests.exceptions.RequestException as e:
+        msg = f"Network error fetching {game}: {e}"
+        logger.error(msg)
+        return pd.DataFrame(), msg
+        
+    except (ValueError, KeyError) as e:
+        msg = f"Data parsing error for {game}: {e}"
+        logger.error(msg)
+        return pd.DataFrame(), msg
+        
     except Exception as e:
-        return pd.DataFrame(), f"Failed to fetch online data for {game}: {str(e)}"
+        msg = f"Unexpected error fetching {game}: {e}"
+        logger.exception(msg)
+        return pd.DataFrame(), msg
 
 def _load_all_history(game: str, use_online: bool = False) -> Tuple[pd.DataFrame, str]:
     path = _game_path(game)
@@ -410,10 +480,24 @@ def _load_all_history(game: str, use_online: bool = False) -> Tuple[pd.DataFrame
 
     for f in files:
         try:
-            if f.lower().endswith(".csv"): df = pd.read_csv(f)
-            else: df = pd.read_excel(f)
+            if f.lower().endswith(".csv"):
+                df = pd.read_csv(f, encoding='utf-8')
+            else:
+                df = pd.read_excel(f)
+        except FileNotFoundError as e:
+            msg = f"Skipped {os.path.basename(f)}: File not found"
+            logger.warning(msg)
+            skipped.append(msg)
+            continue
+        except pd.errors.EmptyDataError as e:
+            msg = f"Skipped {os.path.basename(f)}: Empty file"
+            logger.warning(msg)
+            skipped.append(msg)
+            continue
         except Exception as e:
-            skipped.append(f"Skipped {os.path.basename(f)}: Failed to read ({str(e)})")
+            msg = f"Skipped {os.path.basename(f)}: Failed to read ({type(e).__name__}: {e})"
+            logger.error(msg)
+            skipped.append(msg)
             continue
         df.columns = [str(c).strip().lower() for c in df.columns]
         col_map = {}
@@ -534,8 +618,10 @@ class Config:
         self.max_consecutive = int(np.percentile(consec, 90))
 
 def _ewma_weights(n: int, half_life: int) -> np.ndarray:
-    if n <= 0: return np.array([])
-    lam = math.log(2.0) / max(1, half_life)
+    """Calculate exponentially weighted moving average weights."""
+    if n <= 0:
+        return np.array([])
+    lam = AlgorithmConfig.EWMA_LOG_BASE / max(AlgorithmConfig.MIN_HALF_LIFE, half_life)
     idx = np.arange(n)[::-1]
     w = np.exp(-lam * idx)
     return w / w.sum()
@@ -562,7 +648,20 @@ def _luck_vectors(df: pd.DataFrame, game: str, spec: GameSpec) -> Tuple[np.ndarr
     return main_drought, main_recent
 
 def ml_probs(df: pd.DataFrame, game: str, cfg: Config, main_max: int) -> Optional[np.ndarray]:
-    if not cfg.use_ml or len(df) < 120 or not SKLEARN_AVAILABLE:
+    """
+    Generate ML-based probability estimates for lottery numbers.
+    
+    Args:
+        df: Historical draw data
+        game: Game identifier
+        cfg: Configuration object
+        main_max: Maximum main number
+        
+    Returns:
+        Array of probabilities or None if ML is disabled/unavailable
+    """
+    if not cfg.use_ml or len(df) < AlgorithmConfig.MIN_PROPHET_HISTORY or not SKLEARN_AVAILABLE:
+        logger.debug(f"ML disabled: use_ml={cfg.use_ml}, len={len(df)}, sklearn={SKLEARN_AVAILABLE}")
         return None
 
     spec = GAMES[game]
@@ -579,12 +678,20 @@ def ml_probs(df: pd.DataFrame, game: str, cfg: Config, main_max: int) -> Optiona
         odds = int(np.sum(row_sorted % 2 == 1))
         gaps = float(np.mean(np.diff(row_sorted))) if pick_size > 1 else 0.0
         try:
-            km = KMeans(n_clusters=min(3, pick_size), random_state=cfg.seed, n_init=5)
+            km = KMeans(
+                n_clusters=min(AlgorithmConfig.KMEANS_DEFAULT_CLUSTERS, pick_size),
+                random_state=cfg.seed,
+                n_init=5
+            )
             clusters = km.fit_predict(row_sorted.reshape(-1, 1))
-            cluster_counts = np.bincount(clusters, minlength=min(3, pick_size)).tolist()
+            cluster_counts = np.bincount(
+                clusters,
+                minlength=min(AlgorithmConfig.KMEANS_DEFAULT_CLUSTERS, pick_size)
+            ).tolist()
             if len(cluster_counts) < 3:
                 cluster_counts += [0] * (3 - len(cluster_counts))
-        except Exception:
+        except (ValueError, RuntimeError) as e:
+            logger.warning(f"KMeans clustering failed: {e}")
             cluster_counts = [pick_size, 0, 0]
 
         pairs = int(len(list(itertools.combinations(row_sorted, 2))))
@@ -600,6 +707,7 @@ def ml_probs(df: pd.DataFrame, game: str, cfg: Config, main_max: int) -> Optiona
             X_rep_list.append(X_rows[i])
             y_rep_list.append(int(cls))
     if not X_rep_list:
+        logger.warning("No training samples generated for ML")
         return None
     X_rep = np.vstack(X_rep_list)
     y_rep = np.array(y_rep_list, dtype=int)
@@ -611,11 +719,12 @@ def ml_probs(df: pd.DataFrame, game: str, cfg: Config, main_max: int) -> Optiona
             grid.fit(X_rep, y_rep)
             score = float(getattr(grid, "best_score_", 0.0))
             est = getattr(grid, "best_estimator_", None)
-            if est is not None and score > 0.1:
+            if est is not None and score > AlgorithmConfig.MODEL_SCORE_THRESHOLD:
                 models.append((name, est, score))
                 scores.append(score)
-        except Exception:
-            pass
+                logger.info(f"ML model {name} trained with score {score:.3f}")
+        except (ValueError, RuntimeError) as e:
+            logger.warning(f"Failed to train {name} model: {e}")
 
     if LIGHTGBM_AVAILABLE:
         fit_and_maybe_keep(

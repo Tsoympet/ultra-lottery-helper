@@ -5,22 +5,15 @@ Lottery Data Scheduler - Automated Scheduling System
 Manages periodic fetching of lottery draw results with configurable schedules.
 """
 
+import json
+import logging
 import os
+import signal
 import sys
 import time
-import json
-import signal
-import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
 from pathlib import Path
-
-# Configure logging early
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger('lottery_scheduler')
+from typing import Dict, List, Optional
 
 # Add src to path if needed
 if os.path.dirname(__file__) not in sys.path:
@@ -29,6 +22,8 @@ if os.path.dirname(__file__) not in sys.path:
 try:
     from src.lottery_data_fetcher import LotteryDataFetcher
     from src.ultra_lottery_helper import GAMES, LOTTERY_METADATA
+    from src.utils import get_logger, load_json, save_json
+    from src.config import ValidationConfig
     CORE_AVAILABLE = True
 except ImportError as e:
     CORE_AVAILABLE = False
@@ -41,7 +36,15 @@ except ImportError as e:
     
     GAMES = {}
     LOTTERY_METADATA = {}
-    logger.warning(f"Core modules not available: {e}")
+    # Fallback logger
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    get_logger = lambda name: logging.getLogger(name)
+    print(f"Warning: Core modules not available: {e}")
+
+logger = get_logger('lottery_scheduler')
 
 # Try to import APScheduler for advanced scheduling
 try:
@@ -89,25 +92,12 @@ class LotteryScheduler:
             logger.info("Using simple interval-based scheduling")
     
     def _load_schedule_config(self) -> Dict:
-        """Load scheduling configuration."""
-        if os.path.exists(self.config_file):
-            try:
-                with open(self.config_file, 'r') as f:
-                    return json.load(f)
-            except Exception as e:
-                logger.error(f"Error loading schedule config: {e}")
-                return self._get_default_config()
-        return self._get_default_config()
+        """Load scheduling configuration from file."""
+        return load_json(self.config_file, default=self._get_default_config(), logger=logger)
     
     def _save_schedule_config(self):
-        """Save scheduling configuration."""
-        os.makedirs(os.path.dirname(self.config_file), exist_ok=True)
-        try:
-            with open(self.config_file, 'w') as f:
-                json.dump(self.schedule_config, f, indent=2)
-            logger.info(f"Schedule configuration saved to {self.config_file}")
-        except Exception as e:
-            logger.error(f"Error saving schedule config: {e}")
+        """Save scheduling configuration to file with atomic write."""
+        save_json(self.config_file, self.schedule_config, atomic=True, logger=logger)
     
     def _get_default_config(self) -> Dict:
         """Get default scheduling configuration."""
@@ -136,13 +126,21 @@ class LotteryScheduler:
             cron_expression: Cron expression (e.g., "0 */12 * * *") - requires APScheduler
             enabled: Whether schedule is active
         """
+        # Validate game
         if game not in GAMES:
-            logger.error(f"Unknown lottery: {game}")
-            return
+            raise ValueError(f"Unknown lottery: {game}")
+        
+        # Validate interval_hours using config
+        if interval_hours is not None:
+            if not ValidationConfig.MIN_INTERVAL_HOURS <= interval_hours <= ValidationConfig.MAX_INTERVAL_HOURS:
+                raise ValueError(
+                    f"interval_hours must be between {ValidationConfig.MIN_INTERVAL_HOURS} "
+                    f"and {ValidationConfig.MAX_INTERVAL_HOURS}, got {interval_hours}"
+                )
         
         schedule_entry = {
             "enabled": enabled,
-            "interval_hours": interval_hours
+            "interval_hours": interval_hours or self.schedule_config["default_interval_hours"]
         }
         
         if cron_expression and self.use_apscheduler:
