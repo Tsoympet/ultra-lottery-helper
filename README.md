@@ -46,6 +46,7 @@ Now ships as a **native desktop app (PySide6)** β€” no browser, no local se
 
 ## Features
 - Offline by default; optional online fetch
+- **βœ¨ NEW: Automated Live Feed** - Fetch and store latest draw results automatically (see [DATA_FETCHER_README.md](DATA_FETCHER_README.md))
 - Auto-merge histories from `data/history/<game>/` (CSV/XLS/XLSX)
 - Diagnostics: frequency, recency, last-digits, pairs heatmap, odd/even
 - Modeling: EWMA, BMA, adaptive luck/unluck, optional ML
@@ -77,6 +78,21 @@ source .venv/bin/activate
 
 pip install -r requirements.txt
 python src/ulh_desktop.py
+```
+
+### Automated Data Fetching (New!)
+```bash
+# Fetch latest draw results for all lotteries
+python src/lottery_data_fetcher.py --all
+
+# Fetch specific lottery
+python src/lottery_data_fetcher.py --game EUROJACKPOT
+
+# Check fetch status
+python src/lottery_data_fetcher.py --status
+
+# See full documentation
+cat DATA_FETCHER_README.md
 ```
 
 ## Data Layout
