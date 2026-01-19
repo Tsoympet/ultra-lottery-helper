@@ -14,16 +14,17 @@ os.environ.setdefault("LIBGL_ALWAYS_SOFTWARE", "1")
 def _ensure_egl_runtime():
     """
     Best-effort helper to make EGL runtime available for PySide6 imports in headless
-    environments. It only attempts installation when ULH_AUTO_INSTALL_EGL or CI is set.
+    environments. It only attempts installation when ULH_AUTO_INSTALL_EGL is set.
     """
     if ctypes.util.find_library("EGL"):
         return
-    auto_install = os.environ.get("ULH_AUTO_INSTALL_EGL") or os.environ.get("CI")
+    auto_install = os.environ.get("ULH_AUTO_INSTALL_EGL")
     if not auto_install:
         return
     apt = shutil.which("apt-get")
     sudo = shutil.which("sudo")
     if not (apt and sudo):
+        # Skip silently when package manager is unavailable to keep tests portable.
         return
     subprocess.run([sudo, "-n", apt, "update"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     subprocess.run(
@@ -41,7 +42,7 @@ def _ensure_egl_runtime():
 def test_import_ulh_desktop_offscreen():
     """
     Smoke test for the desktop UI:
-    - Forces QT_QPA_PLATFORM=offscreen so no real display is required.
+    - Forces headless Qt platform so no real display is required.
     - Ensures ulh_desktop.py can be imported without errors.
     """
     _ensure_egl_runtime()
