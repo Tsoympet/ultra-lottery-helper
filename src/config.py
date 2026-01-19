@@ -27,7 +27,8 @@ class AlgorithmConfig:
     MODEL_SCORE_THRESHOLD = 0.1  # Minimum score threshold for model validity
     MIN_CV_SCORE = 0.1  # Minimum cross-validation score
     
-    # Prophet Time Series
+    # Model Requirements
+    MIN_ML_HISTORY = 120  # Minimum data points required for ML models
     MIN_PROPHET_HISTORY = 120  # Minimum data points required for Prophet model
     
     # Probability Smoothing

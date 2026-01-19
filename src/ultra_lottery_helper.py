@@ -660,7 +660,7 @@ def ml_probs(df: pd.DataFrame, game: str, cfg: Config, main_max: int) -> Optiona
     Returns:
         Array of probabilities or None if ML is disabled/unavailable
     """
-    if not cfg.use_ml or len(df) < AlgorithmConfig.MIN_PROPHET_HISTORY or not SKLEARN_AVAILABLE:
+    if not cfg.use_ml or len(df) < AlgorithmConfig.MIN_ML_HISTORY or not SKLEARN_AVAILABLE:
         logger.debug(f"ML disabled: use_ml={cfg.use_ml}, len={len(df)}, sklearn={SKLEARN_AVAILABLE}")
         return None
 

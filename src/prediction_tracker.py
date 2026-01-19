@@ -37,16 +37,26 @@ except ImportError as e:
     # Simple fallback implementations
     def load_json(path, default=None, logger=None):
         import json
+        from pathlib import Path
         try:
             with open(path, 'r', encoding='utf-8') as f:
                 return json.load(f)
-        except:
+        except (FileNotFoundError, json.JSONDecodeError, UnicodeDecodeError) as e:
+            if logger:
+                logger.warning(f"Could not load JSON from {path}: {e}")
             return default
     def save_json(path, data, atomic=True, logger=None):
         import json
+        from pathlib import Path
         Path(path).parent.mkdir(parents=True, exist_ok=True)
-        with open(path, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=2)
+        if atomic:
+            temp_path = Path(path).with_suffix(Path(path).suffix + '.tmp')
+            with open(temp_path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2)
+            temp_path.replace(path)
+        else:
+            with open(path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2)
 
 logger = get_logger('prediction_tracker')
 
