@@ -1,6 +1,6 @@
 # Lottery Icons Placeholder
 
-This file indicates where lottery icon images should be placed.
+This file indicates where lottery icon images should be placed. Placeholder generic icons with the required filenames are included here—replace them with authorized assets as needed.
 
 ## Required Files:
 
