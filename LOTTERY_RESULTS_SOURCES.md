@@ -149,6 +149,147 @@ Typical jackpot ranges (approximate):
 - **TZOKER**: €200,000 - €5+ million
 - **Greek LOTTO**: €300,000 - €10+ million
 
+## Non-European Lotteries Results Sources
+
+### United States
+
+#### US Powerball πŸ‡ΊπŸ‡Έ
+- **Official Results**: https://www.powerball.com/previous-results
+- **Operator**: Multi-State Lottery Association
+- **Has Jackpot**: Yes (can reach over $2 billion)
+- **Draw Frequency**: Three times weekly (Monday, Wednesday, Saturday)
+- **Result Format**: 5 white balls (1-69) + 1 Powerball (1-26)
+- **Jackpot Range**: $20 million - $2+ billion
+- **Participating States**: 45 states + D.C., Puerto Rico, U.S. Virgin Islands
+
+#### US Mega Millions πŸ‡ΊπŸ‡Έ
+- **Official Results**: https://www.megamillions.com/Winning-Numbers/Previous-Drawings.aspx
+- **Operator**: Multi-State Lottery Association
+- **Has Jackpot**: Yes (can reach over $1.5 billion)
+- **Draw Frequency**: Twice weekly (Tuesday, Friday)
+- **Result Format**: 5 white balls (1-70) + 1 Mega Ball (1-25)
+- **Jackpot Range**: $20 million - $1.5+ billion
+- **Participating States**: 45 states + D.C., U.S. Virgin Islands
+
+### Australia
+
+#### Australia Powerball πŸ‡¦πŸ‡Ί
+- **Official Results**: https://www.thelott.com/powerball/results
+- **Operator**: The Lott (Tatts Group)
+- **Has Jackpot**: Yes
+- **Draw Frequency**: Weekly (Thursday)
+- **Result Format**: 7 main numbers (1-35) + 1 Powerball (1-20)
+- **Jackpot Range**: AUD $3 million - $200+ million
+- **Additional Info**: Australia's largest jackpot lottery
+
+### Canada
+
+#### Canada Lotto 6/49 πŸ‡¨πŸ‡¦
+- **Official Results**: https://www.olg.ca/en/lottery/play-lotto-649/past-results.html
+- **Operator**: Interprovincial Lottery Corporation
+- **Has Jackpot**: Yes
+- **Draw Frequency**: Twice weekly (Wednesday, Saturday)
+- **Result Format**: 6 main numbers (1-49) + 1 Bonus (1-10)
+- **Jackpot Range**: CAD $5 million - $60+ million
+- **Additional Info**: Canada's most popular lottery game
+
+### Japan
+
+#### Japan Loto 6 πŸ‡―πŸ‡΅
+- **Official Results**: https://www.mizuhobank.co.jp/takarakuji/loto/loto6/
+- **Operator**: Mizuho Bank (for Ministry of Finance)
+- **Has Jackpot**: Yes
+- **Draw Frequency**: Twice weekly (Monday, Thursday)
+- **Result Format**: 6 main numbers (1-43) + 1 Bonus (1-43)
+- **Jackpot Range**: Β₯200 million - Β₯600+ million
+- **Additional Info**: Numbers displayed in Japanese format
+
+### South Africa
+
+#### South Africa Powerball πŸ‡ΏπŸ‡¦
+- **Official Results**: https://www.nationallottery.co.za/powerball-results
+- **Operator**: ITHUBA National Lottery
+- **Has Jackpot**: Yes
+- **Draw Frequency**: Twice weekly (Tuesday, Friday)
+- **Result Format**: 5 main numbers (1-50) + 1 Powerball (1-20)
+- **Jackpot Range**: R 5 million - R 200+ million
+- **Additional Info**: South Africa's largest jackpot game
+
+## Data Collection Tips
+
+### For Non-European Lotteries
+
+1. **US Powerball & Mega Millions**
+   - Both provide CSV downloads for historical results
+   - Results available immediately after draw (typically 11 PM ET)
+   - Can download multiple years of data at once
+
+2. **Australia Powerball**
+   - Results available within minutes of draw
+   - The Lott provides API access for developers
+   - Historical data downloadable in Excel format
+
+3. **Canada Lotto 6/49**
+   - OLG provides comprehensive historical database
+   - Results posted within 30 minutes of draw
+   - Can filter by date range
+
+4. **Japan Loto 6**
+   - Results in Japanese - may need translation
+   - Official Mizuho Bank website most reliable
+   - Results typically posted by 7 PM JST
+
+5. **South Africa Powerball**
+   - ITHUBA provides real-time results
+   - Historical data available on request
+   - Results verified within 1 hour of draw
+
+### Import Instructions for Non-European Lotteries
+
+Create CSV files with appropriate column headers:
+
+**US Powerball:**
+```csv
+date,n1,n2,n3,n4,n5,powerball
+2026-01-01,5,12,28,41,65,10
+```
+
+**US Mega Millions:**
+```csv
+date,n1,n2,n3,n4,n5,megaball
+2026-01-01,7,14,29,48,62,15
+```
+
+**Australia Powerball:**
+```csv
+date,n1,n2,n3,n4,n5,n6,n7,powerball
+2026-01-02,3,8,15,22,28,31,34,12
+```
+
+**Canada Lotto 6/49:**
+```csv
+date,n1,n2,n3,n4,n5,n6,bonus
+2026-01-01,5,12,18,27,33,42,7
+```
+
+**Japan Loto 6:**
+```csv
+date,n1,n2,n3,n4,n5,n6,bonus
+2026-01-01,3,8,15,22,28,35,18
+```
+
+**South Africa Powerball:**
+```csv
+date,n1,n2,n3,n4,n5,powerball
+2026-01-01,5,12,28,41,48,15
+```
+
+## Total Supported Lotteries: 16
+
+- **3** Greek/Pan-European
+- **7** Other European
+- **6** Non-European (USA, Australia, Canada, Japan, South Africa)
+
 ## Legal Disclaimer
 
 This information is provided for reference purposes only. Always verify results on official lottery websites. The Ultra Lottery Helper application is for entertainment and analytical purposes. Play responsibly and within your means.

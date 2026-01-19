@@ -8,16 +8,22 @@ Each lottery has its own subdirectory:
 
 ```
 data/history/
-β"œβ"€β"€ tzoker/               # Greek TZOKER
-β"œβ"€β"€ lotto/                # Greek LOTTO
-β"œβ"€β"€ eurojackpot/          # EuroJackpot
-β"œβ"€β"€ uk_national_lottery/  # UK National Lottery
-β"œβ"€β"€ la_primitiva/         # Spanish La Primitiva
-β"œβ"€β"€ superenalotto/        # Italian SuperEnalotto
-β"œβ"€β"€ loto_france/          # French Loto
-β"œβ"€β"€ lotto_6aus49/         # German Lotto 6aus49
-β"œβ"€β"€ austrian_lotto/       # Austrian Lotto
-└── swiss_lotto/          # Swiss Lotto
+β"œβ"€β"€ tzoker/                   # Greek TZOKER
+β"œβ"€β"€ lotto/                    # Greek LOTTO
+β"œβ"€β"€ eurojackpot/              # EuroJackpot
+β"œβ"€β"€ uk_national_lottery/      # UK National Lottery
+β"œβ"€β"€ la_primitiva/             # Spanish La Primitiva
+β"œβ"€β"€ superenalotto/            # Italian SuperEnalotto
+β"œβ"€β"€ loto_france/              # French Loto
+β"œβ"€β"€ lotto_6aus49/             # German Lotto 6aus49
+β"œβ"€β"€ austrian_lotto/           # Austrian Lotto
+β"œβ"€β"€ swiss_lotto/              # Swiss Lotto
+β"œβ"€β"€ us_powerball/             # US Powerball
+β"œβ"€β"€ us_mega_millions/         # US Mega Millions
+β"œβ"€β"€ australia_powerball/      # Australia Powerball
+β"œβ"€β"€ canada_lotto_649/         # Canada Lotto 6/49
+β"œβ"€β"€ japan_loto_6/             # Japan Loto 6
+└── south_africa_powerball/   # South Africa Powerball
 ```
 
 ## File Format
@@ -72,6 +78,36 @@ Each lottery requires specific columns based on its game specification:
 #### Swiss Lotto
 - `n1`, `n2`, `n3`, `n4`, `n5`, `n6` - Main numbers (1-42)
 - `lucky` - Lucky number (1-6)
+- `date` - Draw date (optional)
+
+#### US Powerball
+- `n1`, `n2`, `n3`, `n4`, `n5` - White balls (1-69)
+- `powerball` - Powerball (1-26)
+- `date` - Draw date (optional)
+
+#### US Mega Millions
+- `n1`, `n2`, `n3`, `n4`, `n5` - White balls (1-70)
+- `megaball` - Mega Ball (1-25)
+- `date` - Draw date (optional)
+
+#### Australia Powerball
+- `n1`, `n2`, `n3`, `n4`, `n5`, `n6`, `n7` - Main numbers (1-35)
+- `powerball` - Powerball (1-20)
+- `date` - Draw date (optional)
+
+#### Canada Lotto 6/49
+- `n1`, `n2`, `n3`, `n4`, `n5`, `n6` - Main numbers (1-49)
+- `bonus` - Bonus number (1-10)
+- `date` - Draw date (optional)
+
+#### Japan Loto 6
+- `n1`, `n2`, `n3`, `n4`, `n5`, `n6` - Main numbers (1-43)
+- `bonus` - Bonus number (1-43)
+- `date` - Draw date (optional)
+
+#### South Africa Powerball
+- `n1`, `n2`, `n3`, `n4`, `n5` - Main numbers (1-50)
+- `powerball` - Powerball (1-20)
 - `date` - Draw date (optional)
 
 ## Data Sources

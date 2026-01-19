@@ -148,6 +148,13 @@ GAMES: Dict[str, GameSpec] = {
     "LOTTO_6AUS49": GameSpec("LOTTO_6AUS49", 6, 49, 1, 10, ["n1","n2","n3","n4","n5","n6","super"]),
     "AUSTRIAN_LOTTO": GameSpec("AUSTRIAN_LOTTO", 6, 45, 0, 0, ["n1","n2","n3","n4","n5","n6"]),
     "SWISS_LOTTO": GameSpec("SWISS_LOTTO", 6, 42, 1, 6, ["n1","n2","n3","n4","n5","n6","lucky"]),
+    # Non-European Lotteries
+    "US_POWERBALL": GameSpec("US_POWERBALL", 5, 69, 1, 26, ["n1","n2","n3","n4","n5","powerball"]),
+    "US_MEGA_MILLIONS": GameSpec("US_MEGA_MILLIONS", 5, 70, 1, 25, ["n1","n2","n3","n4","n5","megaball"]),
+    "AUSTRALIA_POWERBALL": GameSpec("AUSTRALIA_POWERBALL", 7, 35, 1, 20, ["n1","n2","n3","n4","n5","n6","n7","powerball"]),
+    "CANADA_LOTTO_649": GameSpec("CANADA_LOTTO_649", 6, 49, 1, 10, ["n1","n2","n3","n4","n5","n6","bonus"]),
+    "JAPAN_LOTO_6": GameSpec("JAPAN_LOTO_6", 6, 43, 1, 43, ["n1","n2","n3","n4","n5","n6","bonus"]),
+    "SOUTH_AFRICA_POWERBALL": GameSpec("SOUTH_AFRICA_POWERBALL", 5, 50, 1, 20, ["n1","n2","n3","n4","n5","powerball"]),
 }
 
 OPAP_TICKET_PRICE_DEFAULTS = {
@@ -162,6 +169,13 @@ OPAP_TICKET_PRICE_DEFAULTS = {
     "LOTTO_6AUS49": 1.20,
     "AUSTRIAN_LOTTO": 1.20,
     "SWISS_LOTTO": 2.50,  # CHF 2.50
+    # Non-European Lotteries (approximate prices in USD/local currency)
+    "US_POWERBALL": 2.00,  # $2.00
+    "US_MEGA_MILLIONS": 2.00,  # $2.00
+    "AUSTRALIA_POWERBALL": 1.50,  # AUD $1.50
+    "CANADA_LOTTO_649": 3.00,  # CAD $3.00
+    "JAPAN_LOTO_6": 2.00,  # Β₯200
+    "SOUTH_AFRICA_POWERBALL": 0.50,  # R 5.00 (~$0.50 equivalent)
 }
 
 # Lottery metadata: country, flag, icon, description, results source, jackpot info
@@ -264,6 +278,67 @@ LOTTERY_METADATA = {
         "description": "Swiss lottery - 6 numbers (1-42) + 1 Lucky number (1-6)",
         "official_url": "https://www.swisslos.ch/en/swisslotto",
         "results_url": "https://www.swisslos.ch/en/swisslotto/information/winning-numbers.html",
+        "has_jackpot": True,
+    },
+    # Non-European Lotteries
+    "US_POWERBALL": {
+        "country": "United States",
+        "flag": "usa.png",
+        "icon": "us_powerball.png",
+        "display_name": "US Powerball",
+        "description": "USA lottery - 5 numbers (1-69) + 1 Powerball (1-26)",
+        "official_url": "https://www.powerball.com",
+        "results_url": "https://www.powerball.com/previous-results",
+        "has_jackpot": True,
+    },
+    "US_MEGA_MILLIONS": {
+        "country": "United States",
+        "flag": "usa.png",
+        "icon": "us_mega_millions.png",
+        "display_name": "US Mega Millions",
+        "description": "USA lottery - 5 numbers (1-70) + 1 Mega Ball (1-25)",
+        "official_url": "https://www.megamillions.com",
+        "results_url": "https://www.megamillions.com/Winning-Numbers/Previous-Drawings.aspx",
+        "has_jackpot": True,
+    },
+    "AUSTRALIA_POWERBALL": {
+        "country": "Australia",
+        "flag": "australia.png",
+        "icon": "australia_powerball.png",
+        "display_name": "Australia Powerball",
+        "description": "Australian lottery - 7 numbers (1-35) + 1 Powerball (1-20)",
+        "official_url": "https://www.thelott.com/powerball",
+        "results_url": "https://www.thelott.com/powerball/results",
+        "has_jackpot": True,
+    },
+    "CANADA_LOTTO_649": {
+        "country": "Canada",
+        "flag": "canada.png",
+        "icon": "canada_lotto_649.png",
+        "display_name": "Canada Lotto 6/49",
+        "description": "Canadian lottery - 6 numbers (1-49) + 1 Bonus (1-10)",
+        "official_url": "https://www.lotto649.ca",
+        "results_url": "https://www.olg.ca/en/lottery/play-lotto-649/past-results.html",
+        "has_jackpot": True,
+    },
+    "JAPAN_LOTO_6": {
+        "country": "Japan",
+        "flag": "japan.png",
+        "icon": "japan_loto_6.png",
+        "display_name": "Japan Loto 6",
+        "description": "Japanese lottery - 6 numbers (1-43) + 1 Bonus (1-43)",
+        "official_url": "https://www.mizuhobank.co.jp/takarakuji/loto/loto6/",
+        "results_url": "https://www.mizuhobank.co.jp/takarakuji/loto/loto6/",
+        "has_jackpot": True,
+    },
+    "SOUTH_AFRICA_POWERBALL": {
+        "country": "South Africa",
+        "flag": "south_africa.png",
+        "icon": "south_africa_powerball.png",
+        "display_name": "South Africa Powerball",
+        "description": "South African lottery - 5 numbers (1-50) + 1 Powerball (1-20)",
+        "official_url": "https://www.nationallottery.co.za",
+        "results_url": "https://www.nationallottery.co.za/powerball-results",
         "has_jackpot": True,
     },
 }

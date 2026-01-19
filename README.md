@@ -139,10 +139,12 @@ cat PREDICTION_TRACKER_README.md
 
 ## Data Layout
 ```
-data/history/{tzoker,lotto,eurojackpot,uk_national_lottery,la_primitiva,
-              superenalotto,loto_france,lotto_6aus49,austrian_lotto,swiss_lotto}
-exports/{tzoker,lotto,eurojackpot,uk_national_lottery,la_primitiva,
-         superenalotto,loto_france,lotto_6aus49,austrian_lotto,swiss_lotto}
+data/history/{tzoker,lotto,eurojackpot,
+              uk_national_lottery,la_primitiva,superenalotto,loto_france,lotto_6aus49,austrian_lotto,swiss_lotto,
+              us_powerball,us_mega_millions,australia_powerball,canada_lotto_649,japan_loto_6,south_africa_powerball}
+exports/{tzoker,lotto,eurojackpot,
+         uk_national_lottery,la_primitiva,superenalotto,loto_france,lotto_6aus49,austrian_lotto,swiss_lotto,
+         us_powerball,us_mega_millions,australia_powerball,canada_lotto_649,japan_loto_6,south_africa_powerball}
 assets/
   β"œβ"€β"€ flags/          # Country flags for each lottery
   β"œβ"€β"€ lottery_icons/  # Official lottery icons

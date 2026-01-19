@@ -99,7 +99,9 @@ class MainWindow(QMainWindow):
         self.game_combo.addItems([
             "TZOKER", "LOTTO", "EUROJACKPOT",
             "UK_NATIONAL_LOTTERY", "LA_PRIMITIVA", "SUPERENALOTTO",
-            "LOTO_FRANCE", "LOTTO_6AUS49", "AUSTRIAN_LOTTO", "SWISS_LOTTO"
+            "LOTO_FRANCE", "LOTTO_6AUS49", "AUSTRIAN_LOTTO", "SWISS_LOTTO",
+            "US_POWERBALL", "US_MEGA_MILLIONS", "AUSTRALIA_POWERBALL",
+            "CANADA_LOTTO_649", "JAPAN_LOTO_6", "SOUTH_AFRICA_POWERBALL"
         ])
         lay.addWidget(self.game_combo)
         lay.addStretch()
