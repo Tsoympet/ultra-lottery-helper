@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Callable, List, Sequence, Tuple
+from typing import Callable, List, Optional, Sequence, Tuple
 
 import numpy as np
 import pandas as pd
@@ -71,7 +71,7 @@ def transformer_sequence_predict(
     return preds
 
 
-def neural_ensemble(predictions: Sequence[Sequence[float]], weights: Sequence[float] | None = None) -> List[float]:
+def neural_ensemble(predictions: Sequence[Sequence[float]], weights: Optional[Sequence[float]] = None) -> List[float]:
     """
     Combines multiple model outputs using normalized weights (default = uniform).
     """
@@ -145,7 +145,7 @@ def genetic_optimize(
     fitness_fn: Callable[[Sequence[float]], float],
     generations: int = 5,
     mutation_rate: float = 0.1,
-    seed: int | None = None,
+    seed: Optional[int] = None,
 ) -> List[float]:
     """
     Simple genetic algorithm for parameter search.
