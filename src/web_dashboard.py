@@ -70,8 +70,8 @@ def _load_latest_draw(data_dir: Path) -> Optional[Dict[str, Any]]:
 
     csv_files: List[Path] = sorted(data_dir.glob("*.csv"))
     if not csv_files:
-        # Shallow search in immediate subdirectories to avoid deep traversal cost
-        for subdir in sorted(p for p in data_dir.iterdir() if p.is_dir()):
+        # Shallow search in immediate subdirectories to avoid deep traversal cost (cap at 10)
+        for subdir in list(sorted(p for p in data_dir.iterdir() if p.is_dir()))[:10]:
             csv_files.extend(sorted(subdir.glob("*.csv")))
     for csv_file in reversed(csv_files):
         try:
@@ -669,7 +669,7 @@ def _index_html() -> bytes:
     }};
 
     refresh();
-    setInterval(refresh, 7000);
+    setInterval(refresh, 12000);
   </script>
 </body>
 </html>"""
@@ -702,6 +702,7 @@ def _asset_response(handler: BaseHTTPRequestHandler, request_path: str):
     candidate_resolved = candidate.resolve()
     root_resolved = ASSETS_ROOT.resolve()
     try:
+        # Available on Python 3.9+
         if not candidate_resolved.is_relative_to(root_resolved):
             return _json_response(handler, {"error": "Asset not found"}, status=404)
     except AttributeError:  # pragma: no cover - python <3.9 fallback
