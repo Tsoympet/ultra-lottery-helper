@@ -91,6 +91,21 @@ oracle-lottery
 python src/ulh_desktop.py
 ```
 
+### Docker Deployment
+Run the application in a container:
+
+```bash
+# Build and run with Docker
+docker build -t oracle-lottery-predictor .
+docker run --rm -v $(pwd)/data:/app/data -v $(pwd)/exports:/app/exports \
+  oracle-lottery-predictor python src/ulh_desktop.py
+
+# Or use Docker Compose
+docker-compose up oracle-lottery
+
+# See SETUP.md for detailed Docker and CMake instructions
+```
+
 ### Automated Data Fetching (New!)
 ```bash
 # Fetch latest draw results for all lotteries

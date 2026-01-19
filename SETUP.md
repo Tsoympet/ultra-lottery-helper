@@ -178,6 +178,107 @@ pyinstaller --onefile --noconsole \
   src/ulh_desktop.py
 ```
 
+## Docker Deployment
+
+### Using Docker
+
+Build and run the application in a container:
+
+```bash
+# Build the Docker image
+docker build -t oracle-lottery-predictor .
+
+# Run the container (headless mode)
+docker run --rm -v $(pwd)/data:/app/data -v $(pwd)/exports:/app/exports \
+  oracle-lottery-predictor python src/ulh_desktop.py
+
+# Run with docker-compose
+docker-compose up oracle-lottery
+```
+
+### Using Docker Compose
+
+```bash
+# Start the main application
+docker-compose up oracle-lottery
+
+# Run the learning CLI
+docker-compose --profile tools run oracle-lottery-learn
+
+# Run the data fetcher
+docker-compose --profile tools run oracle-lottery-fetcher
+
+# Build and start all services
+docker-compose build
+docker-compose up
+```
+
+### Docker with X11 (GUI Support on Linux)
+
+To run the desktop UI with display support:
+
+```bash
+# Allow X11 connections
+xhost +local:docker
+
+# Run with X11 forwarding
+docker run --rm \
+  -e DISPLAY=$DISPLAY \
+  -e QT_X11_NO_MITSHM=1 \
+  -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+  -v $(pwd)/data:/app/data \
+  -v $(pwd)/exports:/app/exports \
+  oracle-lottery-predictor python src/ulh_desktop.py
+
+# Revoke X11 access when done
+xhost -local:docker
+```
+
+## CMake Build
+
+### Building with CMake
+
+The project includes CMake support for cross-platform builds:
+
+```bash
+# Create build directory
+mkdir build && cd build
+
+# Configure the project
+cmake ..
+
+# Install Python dependencies
+cmake --build . --target install-deps
+
+# Install the package
+cmake --build . --target install-package
+
+# Run tests
+cmake --build . --target test
+
+# Run linters
+cmake --build . --target lint
+
+# Format code
+cmake --build . --target format
+
+# Clean build artifacts
+cmake --build . --target clean-all
+
+# Run the application
+cmake --build . --target run
+```
+
+### CMake Installation
+
+```bash
+# Configure with custom install prefix
+cmake -DCMAKE_INSTALL_PREFIX=/opt/oracle-lottery ..
+
+# Install files
+cmake --build . --target install
+```
+
 ## Troubleshooting
 
 ### Import Errors
