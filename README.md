@@ -61,6 +61,8 @@ Now ships as a **native desktop app (PySide6)** β€” no browser, no local se
 - **Plot caching** & **debounced** heavy sliders
 - Windows **Installer** (icon, shortcuts, **Uninstall**)
 - CI/CD: GitHub Actions (portable EXE + Installer)
+- **βœ¨ NEW: Docker Support** - Containerized deployment with Docker and Docker Compose (see [DOCKER_CMAKE_README.md](DOCKER_CMAKE_README.md))
+- **βœ¨ NEW: CMake Build System** - Cross-platform build support with CMake (see [DOCKER_CMAKE_README.md](DOCKER_CMAKE_README.md))
 
 ## Quick Start
 ### Windows (Installer)
@@ -89,6 +91,21 @@ pip install -e .
 oracle-lottery
 # Or
 python src/ulh_desktop.py
+```
+
+### Docker Deployment
+Run the application in a container:
+
+```bash
+# Build and run with Docker
+docker build -t oracle-lottery-predictor .
+docker run --rm -v $(pwd)/data:/app/data -v $(pwd)/exports:/app/exports \
+  oracle-lottery-predictor python src/ulh_desktop.py
+
+# Or use Docker Compose
+docker-compose up oracle-lottery
+
+# For detailed Docker and CMake instructions, see DOCKER_CMAKE_README.md
 ```
 
 ### Automated Data Fetching (New!)

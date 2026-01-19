@@ -1,0 +1,64 @@
+services:
+  oracle-lottery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: oracle-lottery-predictor:latest
+    container_name: oracle-lottery-predictor
+    environment:
+      - QT_QPA_PLATFORM=offscreen
+      - PYTHONUNBUFFERED=1
+    volumes:
+      # Mount data directory for persistence
+      - ./data:/app/data
+      # Mount exports directory for generated predictions
+      - ./exports:/app/exports
+    # For running the desktop UI with X11 forwarding (Linux hosts)
+    # Uncomment the following lines if you need GUI support:
+    # environment:
+    #   - DISPLAY=${DISPLAY}
+    #   - QT_X11_NO_MITSHM=1
+    # volumes:
+    #   - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    # network_mode: host
+    
+    # Default command (override as needed)
+    command: ["python", "src/ulh_desktop.py", "--help"]
+    
+    # Restart policy
+    restart: unless-stopped
+
+  # Optional: Service for running the learning CLI
+  oracle-lottery-learn:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: oracle-lottery-predictor:latest
+    container_name: oracle-lottery-learn
+    environment:
+      - QT_QPA_PLATFORM=offscreen
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./data:/app/data
+      - ./exports:/app/exports
+    command: ["python", "src/ulh_learn_cli.py", "--help"]
+    restart: "no"
+    profiles:
+      - tools
+
+  # Optional: Service for data fetching
+  oracle-lottery-fetcher:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: oracle-lottery-predictor:latest
+    container_name: oracle-lottery-fetcher
+    environment:
+      - QT_QPA_PLATFORM=offscreen
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./data:/app/data
+    command: ["python", "src/lottery_data_fetcher.py", "--help"]
+    restart: "no"
+    profiles:
+      - tools

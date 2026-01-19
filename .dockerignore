@@ -1,0 +1,72 @@
+# Git
+.git
+.gitignore
+.github
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Build / packaging
+build/
+dist/
+dist_installer/
+*.egg-info/
+*.spec
+*.exe
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Testing and coverage
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.tox/
+
+# IDE
+.idea/
+.vscode/
+.spyproject
+.ropeproject
+*.swp
+*.swo
+*~
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Documentation (keep README but exclude others)
+*.md
+!README.md
+!LICENSE.txt
+
+# Logs
+*.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Windows specific
+build_installer.bat
+*.iss
+
+# Examples and documentation
+examples/
+CHANGELOG.md
+SETUP.md
+RELEASE-CHECKLIST.md
