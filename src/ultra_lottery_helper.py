@@ -203,7 +203,7 @@ LOTTERY_METADATA = {
         "flag": "spain.png",
         "icon": "la_primitiva.png",
         "display_name": "La Primitiva",
-        "description": "Spanish lottery - 6 numbers (1-49) + 1 bonus (0-9)",
+        "description": "Spanish lottery - 6 numbers (1-49) + 1 bonus (1-9)",
         "official_url": "https://www.loteriasyapuestas.es/en/la-primitiva",
     },
     "SUPERENALOTTO": {
@@ -227,7 +227,7 @@ LOTTERY_METADATA = {
         "flag": "germany.png",
         "icon": "lotto_6aus49.png",
         "display_name": "Lotto 6aus49",
-        "description": "German lottery - 6 numbers (1-49) + 1 Superzahl (0-9)",
+        "description": "German lottery - 6 numbers (1-49) + 1 Superzahl (1-10)",
         "official_url": "https://www.lotto.de/lotto-6aus49",
     },
     "AUSTRIAN_LOTTO": {
