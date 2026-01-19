@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oracle-lottery
+  labels:
+    app: oracle-lottery
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: oracle-lottery
+  template:
+    metadata:
+      labels:
+        app: oracle-lottery
+    spec:
+      containers:
+        - name: oracle-lottery
+          image: oracle-lottery-predictor:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: dashboard
+          env:
+            - name: DASHBOARD_PORT
+              value: "8080"
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oracle-lottery
+  labels:
+    app: oracle-lottery
+spec:
+  type: ClusterIP
+  selector:
+    app: oracle-lottery
+  ports:
+    - name: http
+      port: 80
+      targetPort: dashboard
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: oracle-lottery-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: oracle-lottery
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
