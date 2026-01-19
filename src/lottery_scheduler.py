@@ -116,7 +116,7 @@ class LotteryScheduler:
         }
     
     def add_schedule(self, game: str, interval_hours: int = 12, 
-                     cron_expression: str = None, enabled: bool = True,
+                     cron_expression: Optional[str] = None, enabled: bool = True,
                      raise_on_unknown: bool = False) -> bool:
         """
         Add or update schedule for a lottery.
