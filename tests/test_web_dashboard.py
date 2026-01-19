@@ -79,3 +79,23 @@ def test_dashboard_state_status_includes_metrics_and_notifications():
         assert "notifications" in status
         assert status["metrics"]["counters"]["heartbeat"] == 1
         assert status["notifications"]["recent"]
+
+
+def test_lotteries_overview_reads_latest_draw_from_history():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        history_dir = Path(tmpdir) / "history" / "tzoker"
+        history_dir.mkdir(parents=True)
+        sample = history_dir / "example_draws.csv"
+        sample.write_text("date,n1,n2\n2025-01-01,1,2\n")
+
+        state = DashboardState(
+            scheduler=None,
+            data_root=Path(tmpdir),
+        )
+
+        overview = state.lotteries_overview()
+        tzoker = next(entry for entry in overview["lotteries"] if entry["id"] == "TZOKER")
+
+        assert tzoker["history_available"] is True
+        assert tzoker["latest_draw"]["date"] == "2025-01-01"
+        assert overview["news"]
