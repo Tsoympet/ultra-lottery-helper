@@ -25,7 +25,7 @@ Now ships as a **native desktop app (PySide6)** β€” no browser, no local se
 - **UK National Lottery** πŸ‡¬πŸ‡§ - 6 numbers (1-59)
 
 ### Spain
-- **La Primitiva** πŸ‡ͺπŸ‡Έ - 6 numbers (1-49) + 1 bonus (0-9)
+- **La Primitiva** πŸ‡ͺπŸ‡Έ - 6 numbers (1-49) + 1 reintegro (1-10)
 
 ### Italy
 - **SuperEnalotto** πŸ‡?πŸ‡Ή - 6 numbers (1-90)
@@ -34,7 +34,7 @@ Now ships as a **native desktop app (PySide6)** β€” no browser, no local se
 - **Loto** πŸ‡«πŸ‡· - 5 numbers (1-49) + 1 Chance (1-10)
 
 ### Germany
-- **Lotto 6aus49** πŸ‡©πŸ‡ͺ - 6 numbers (1-49) + 1 Superzahl (0-9)
+- **Lotto 6aus49** πŸ‡©πŸ‡ͺ - 6 numbers (1-49) + 1 Superzahl (1-10)
 
 ### Austria
 - **Austrian Lotto** πŸ‡¦πŸ‡Ή - 6 numbers (1-45)
