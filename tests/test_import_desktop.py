@@ -2,6 +2,7 @@ import os
 import sys
 import importlib.util
 import pytest
+import pytest
 
 
 @pytest.mark.skipif(
@@ -14,6 +15,7 @@ def test_import_ulh_desktop_offscreen():
     - Forces QT_QPA_PLATFORM=offscreen so no real display is required.
     - Ensures ulh_desktop.py can be imported without errors.
     """
+    pytest.importorskip("PySide6.QtWidgets")
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     sys.path.append("src")
     import ulh_desktop  # noqa: F401

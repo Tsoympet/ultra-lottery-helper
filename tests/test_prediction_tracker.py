@@ -9,10 +9,8 @@ import tempfile
 import shutil
 from datetime import datetime, timedelta
 
-# Add src to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
-
 from prediction_tracker import PredictionTracker
+from ultra_lottery_helper import GAMES
 
 
 class TestPredictionTracker:
@@ -242,6 +240,21 @@ class TestPredictionTracker:
         
         assert removed == 1
         assert len(self.tracker.predictions.get('TZOKER', [])) == 0
+
+    @pytest.mark.parametrize("game", list(GAMES.keys()))
+    def test_validate_prediction_numbers_accepts_valid_inputs(self, game):
+        """Ensure every configured lottery accepts well-formed predictions."""
+        spec = GAMES[game]
+        main_numbers = list(range(1, spec.main_pick + 1))
+        sec_numbers = []
+        if spec.sec_pick:
+            pool = list(range(1, spec.sec_max + 1))
+            if game in self.tracker.SHARED_POOL_GAMES:
+                pool = [n for n in pool if n not in main_numbers]
+            sec_numbers = pool[: spec.sec_pick]
+        numbers = main_numbers + sec_numbers
+        validated = self.tracker._validate_prediction_numbers(game, numbers)
+        assert validated == numbers
     
     def test_multiple_predictions_same_draw(self):
         """Test multiple predictions for same draw."""

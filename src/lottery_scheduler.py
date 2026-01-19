@@ -116,7 +116,7 @@ class LotteryScheduler:
         }
     
     def add_schedule(self, game: str, interval_hours: int = 12, 
-                     cron_expression: str = None, enabled: bool = True):
+                     cron_expression: str = None, enabled: bool = True) -> bool:
         """
         Add or update schedule for a lottery.
         
@@ -125,10 +125,14 @@ class LotteryScheduler:
             interval_hours: Hours between fetches (used if no cron)
             cron_expression: Cron expression (e.g., "0 */12 * * *") - requires APScheduler
             enabled: Whether schedule is active
+
+        Returns:
+            True if schedule was added, False otherwise.
         """
         # Validate game
         if game not in GAMES:
-            raise ValueError(f"Unknown lottery: {game}")
+            logger.error(f"Unknown lottery: {game}")
+            return False
         
         # Validate interval_hours using config
         if interval_hours is not None:
@@ -149,6 +153,7 @@ class LotteryScheduler:
         self.schedule_config["schedules"][game] = schedule_entry
         self._save_schedule_config()
         logger.info(f"Schedule added for {game}: {schedule_entry}")
+        return True
     
     def remove_schedule(self, game: str):
         """Remove schedule for a lottery."""

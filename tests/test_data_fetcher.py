@@ -90,6 +90,11 @@ class TestLotteryDataFetcher:
         
         assert success is False
         assert 'Unknown lottery' in msg
+
+    def test_unknown_lottery_raises_when_requested(self):
+        """Ensure raise_on_unknown surfaces ValueError for invalid lotteries."""
+        with pytest.raises(ValueError):
+            self.fetcher.fetch_lottery_data('UNKNOWN_LOTTERY', raise_on_unknown=True)
     
     def test_fetch_log_structure(self):
         """Test that fetch log has correct structure after manual update."""
