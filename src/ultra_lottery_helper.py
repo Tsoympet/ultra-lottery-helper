@@ -483,7 +483,7 @@ def fetch_online_history(game: str) -> Tuple[pd.DataFrame, str]:
                 msg = f"No HTML source configured for {game} and API returned no data"
                 return pd.DataFrame(), msg
 
-        if not url and not api_endpoint:
+        if not url:
             msg = f"No HTML source configured for {game}"
             return pd.DataFrame(), msg
 
