@@ -96,11 +96,25 @@ View historical data, frequency distributions, number pair analysis, and recent 
 ### Prediction Engine
 - **Statistical Modeling** - EWMA, BMA, adaptive luck/unluck factors
 - **Machine Learning** - Optional ML ensemble (Prophet, LightGBM, XGBoost, Random Forest, SVM)
+- **Deep Learning** - Lightweight LSTM sequence predictors, Transformer-style attention blocks, neural network ensembles
 - **Smart Constraints** - Customizable sum ranges, odd/even balance, consecutive number limits
 - **Advanced Sampling** - Gumbel Top-k sampler with optional wheel systems
 - **Portfolio Optimization** - DPP/Greedy selection with coverage boost
 - **Risk Assessment** - Monte Carlo simulation
 - **EV Re-ranking** - Cost-aware expected value optimization
+
+### Advanced Learning & Evaluation
+- **Reinforcement Learning** - Reward-driven tuning from observed outcomes
+- **Multi-Armed Bandits** - Strategy selection with ε-greedy exploration
+- **Genetic Algorithms** - Parameter search with mutation and crossover
+- **Cross-Validation & Backtesting** - Walk-forward evaluation on historical data
+- **Statistical Significance Testing** - Two-proportion z-tests for strategy changes
+
+### User Insights
+- **Confidence Scores** - Softmax-normalized prediction probabilities
+- **Explainable AI** - Correlation-based feature importance for transparency
+- **Performance Visualization** - Lightweight series outputs for plotting curves
+- **A/B Testing Support** - Lift calculations and significance for strategy experiments
 
 ### Automation & Tracking
 - **βœ¨ AI Learning System** - Adaptive machine learning that improves predictions over time ([AI_SYSTEM_STATUS.md](AI_SYSTEM_STATUS.md))
