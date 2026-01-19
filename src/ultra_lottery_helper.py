@@ -122,7 +122,8 @@ def _quick_df_sig(df: pd.DataFrame, game: str) -> str:
         cols = list(df.columns)
     sample = df[cols].tail(100)
     buf = sample.to_csv(index=False).encode("utf-8")
-    h = hashlib.sha1(buf).hexdigest()
+    # Note: SHA1 is used here only for cache key generation, not cryptography
+    h = hashlib.sha1(buf, usedforsecurity=False).hexdigest()  # nosec B324
     return f"{game}|{len(df)}|{h}"
 
 # ---- Helper for native (no gradio) progress ----

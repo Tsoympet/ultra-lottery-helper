@@ -154,7 +154,8 @@ class LotteryDataFetcher:
                     last_fetch_dt = datetime.fromisoformat(last_fetch)
                     hours_ago = (datetime.now() - last_fetch_dt).total_seconds() / 3600
                     last_fetch = f"{hours_ago:.1f}h ago"
-                except:
+                except (ValueError, TypeError):
+                    # Keep original value if parsing fails
                     pass
             
             status_data.append({

@@ -93,11 +93,14 @@ def _utcnow():
     return dt.datetime.utcnow().replace(microsecond=0).isoformat()
 
 def _load_state() -> Dict:
+    """Load learning state from JSON file."""
     if STATE_JSON.exists():
         try:
             return json.loads(STATE_JSON.read_text(encoding="utf-8"))
-        except Exception:
-            pass
+        except (json.JSONDecodeError, UnicodeDecodeError, OSError) as e:
+            # Log and return defaults if state file is corrupted
+            import logging
+            logging.warning(f"Failed to load state from {STATE_JSON}: {e}")
     # defaults
     return {
         "luck_beta": 0.10,
@@ -107,6 +110,7 @@ def _load_state() -> Dict:
     }
 
 def _save_state(state: Dict):
+    """Save learning state to JSON file."""
     STATE_JSON.write_text(json.dumps(state, indent=2), encoding="utf-8")
 
 # ----------------------------------------------------------------------------------
@@ -117,8 +121,12 @@ def record_portfolio(game: str, portfolio: List[List[int]], tag: Optional[str] =
     """
     Save a generated portfolio (list of combinations) for a game.
     Returns the number of saved rows.
+    
+    Raises:
+        ValueError: If game is unknown
     """
-    assert game in GAMES, f"Unknown game: {game}"
+    if game not in GAMES:
+        raise ValueError(f"Unknown game: {game}")
     ts = _utcnow()
     rows = [(game, ts, tag, json.dumps(c)) for c in portfolio]
     with _connect() as cx:
@@ -129,9 +137,21 @@ def record_portfolio(game: str, portfolio: List[List[int]], tag: Optional[str] =
 def record_outcome(game: str, main: List[int], sec: Optional[List[int]] = None, ts_draw: Optional[str] = None) -> int:
     """
     Record an official draw outcome.
-    ts_draw: ISO string (date or datetime); default = today (UTC date).
+    
+    Args:
+        game: Game identifier
+        main: Main numbers drawn
+        sec: Secondary numbers (optional)
+        ts_draw: ISO string (date or datetime); default = today (UTC date)
+        
+    Returns:
+        Number of rows inserted (always 1)
+        
+    Raises:
+        ValueError: If game is unknown
     """
-    assert game in GAMES, f"Unknown game: {game}"
+    if game not in GAMES:
+        raise ValueError(f"Unknown game: {game}")
     if ts_draw is None:
         ts_draw = dt.date.today().isoformat()
     payload = {"main": sorted([int(x) for x in main])}
@@ -147,8 +167,12 @@ def evaluate_latest(game: str, k_limit: Optional[int] = None) -> Dict[str, float
     """
     Compare the MOST RECENT recorded predictions of `game` vs the MOST RECENT outcome,
     store granular evals, and return summary metrics.
+    
+    Raises:
+        ValueError: If game is unknown
     """
-    assert game in GAMES, f"Unknown game: {game}"
+    if game not in GAMES:
+        raise ValueError(f"Unknown game: {game}")
     with _connect() as cx:
         # Last outcome
         row = cx.execute("SELECT ts_draw, outcome FROM outcomes WHERE game=? ORDER BY id DESC LIMIT 1", (game,)).fetchone()
