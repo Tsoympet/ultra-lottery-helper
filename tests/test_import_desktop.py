@@ -22,20 +22,32 @@ def _ensure_egl_runtime():
     if ctypes.util.find_library("EGL"):
         return
     auto_install = os.environ.get("ULH_AUTO_INSTALL_EGL")
-    if not auto_install:
+    ci_context = os.environ.get("CI", "").lower() in {"1", "true", "yes"}
+    if not (auto_install and ci_context):
         return
     apt = shutil.which("apt-get")
     sudo = shutil.which("sudo")
     if not (apt and sudo):
         # Skip silently when package manager is unavailable to keep tests portable.
         return
-    subprocess.run([sudo, "-n", apt, "update"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    subprocess.run(
-        [sudo, "-n", apt, "install", "-y", "libegl1", "libgl1"],
-        check=False,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
+    try:
+        subprocess.run(
+            [sudo, "-n", apt, "update"],
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=60,
+        )
+        subprocess.run(
+            [sudo, "-n", apt, "install", "-y", "libegl1", "libgl1"],
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=60,
+        )
+    except subprocess.TimeoutExpired:
+        warnings.warn("Timed out while attempting to install libegl1/libgl1.")
+        return
     if ctypes.util.find_library("EGL") is None:
         warnings.warn("libEGL installation attempt failed; ensure libegl1/libgl1 are installed.")
 
