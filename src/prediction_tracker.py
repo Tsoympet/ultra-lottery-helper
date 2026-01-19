@@ -15,13 +15,19 @@ from typing import Dict, List, Optional, Set, Tuple
 import numpy as np
 import pandas as pd
 
+def _fallback_validate_range(value, min_val, max_val, name="value"):
+    if not min_val <= value <= max_val:
+        raise ValueError(f"{name} must be between {min_val} and {max_val}, got {value}")
+
+_core_validate_range = None
+
 # Add src to path if needed
 if os.path.dirname(__file__) not in sys.path:
     sys.path.insert(0, os.path.dirname(__file__))
 
 try:
     from src.ultra_lottery_helper import GAMES, LOTTERY_METADATA, _load_all_history
-    from src.utils import get_logger, load_json, save_json, validate_range
+    from src.utils import get_logger, load_json, save_json, validate_range as _core_validate_range
     CORE_AVAILABLE = True
 except ImportError as e:
     CORE_AVAILABLE = False
@@ -59,10 +65,10 @@ except ImportError as e:
         else:
             with open(path, 'w', encoding='utf-8') as f:
                 json.dump(data, f, indent=2)
-    def _fallback_validate_range(value, min_val, max_val, name="value"):
-        if not min_val <= value <= max_val:
-            raise ValueError(f"{name} must be between {min_val} and {max_val}, got {value}")
-    validate_range = _fallback_validate_range
+
+validate_range = _core_validate_range if CORE_AVAILABLE else _fallback_validate_range
+
+SHARED_POOL_GAMES: Set[str] = {"JAPAN_LOTO_6"}
 
 logger = get_logger('prediction_tracker')
 
@@ -128,11 +134,11 @@ class PredictionTracker:
 
         if spec.sec_pick:
             if len(set(sec_numbers)) != len(sec_numbers):
-                raise ValueError(f"Secondary numbers must be unique for {game}")
+                raise ValueError(f"Secondary numbers must be unique for lottery {game}")
             for n in sec_numbers:
                 validate_range(n, 1, spec.sec_max, "Secondary number")
             # Lotteries with shared pools (e.g., same max) cannot repeat numbers across pools
-            if spec.sec_max == spec.main_max and set(sec_numbers).intersection(main_numbers):
+            if game in SHARED_POOL_GAMES and set(sec_numbers).intersection(main_numbers):
                 raise ValueError(f"Secondary numbers must differ from main numbers for {game}")
 
         return numbers
