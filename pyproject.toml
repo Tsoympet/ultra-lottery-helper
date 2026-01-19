@@ -122,5 +122,5 @@ Repository = "https://github.com/Tsoympet/ultra-lottery-helper"
 Issues = "https://github.com/Tsoympet/ultra-lottery-helper/issues"
 
 [project.scripts]
-oracle-lottery = "ulh_desktop:main"
-oracle-lottery-learn = "ulh_learn_cli:main"
+oracle-lottery = "src.ulh_desktop:main"
+oracle-lottery-learn = "src.ulh_learn_cli:main"

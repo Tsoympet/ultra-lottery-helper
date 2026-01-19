@@ -25,7 +25,7 @@ except ImportError:
 # Import core functionality
 try:
     import ultra_lottery_helper as ulh
-    from ulh_learning import learn_and_save
+    from ulh_learning import learn_after_draw
     CORE_AVAILABLE = True
 except ImportError:
     CORE_AVAILABLE = False
@@ -301,8 +301,8 @@ class MainWindow(QMainWindow):
     def _run_learning(self, game):
         """Run learning in worker thread."""
         try:
-            learn_and_save(game)
-            return {'game': game, 'status': 'success'}
+            result = learn_after_draw(game, k_limit=100, self_replay_rounds=1)
+            return {'game': game, 'status': 'success', 'result': result}
         except Exception as e:
             raise ValueError(f"Learning failed: {str(e)}")
     

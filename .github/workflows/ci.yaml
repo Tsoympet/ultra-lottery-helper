@@ -72,6 +72,16 @@ jobs:
         env:
           QT_QPA_PLATFORM: offscreen
         run: pytest -q --disable-warnings --maxfail=1
+      
+      - name: Security scan with bandit
+        run: |
+          pip install bandit[toml]
+          bandit -r src/
+      
+      - name: Dependency security check with safety
+        run: |
+          pip install safety
+          safety check
 
   windows:
     name: Windows (Py${{ matrix.python-version }})
