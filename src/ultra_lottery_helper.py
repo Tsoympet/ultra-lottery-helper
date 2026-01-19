@@ -41,8 +41,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Local utilities
-from .config import AlgorithmConfig, NetworkConfig
-from .utils import get_logger
+try:
+    from .config import AlgorithmConfig, NetworkConfig
+    from .utils import get_logger
+except ImportError:  # pragma: no cover - fallback for script execution
+    from config import AlgorithmConfig, NetworkConfig  # type: ignore
+    from utils import get_logger  # type: ignore
 
 # Setup logging
 logger = get_logger(__name__)
@@ -373,7 +377,10 @@ def fetch_online_history(game: str) -> Tuple[pd.DataFrame, str]:
     Returns:
         Tuple of (DataFrame with draw history, status message)
     """
-    from .utils import retry_with_backoff, RateLimiter
+    try:
+        from .utils import retry_with_backoff, RateLimiter
+    except ImportError:  # pragma: no cover - script fallback
+        from utils import retry_with_backoff, RateLimiter  # type: ignore
     
     urls = {
         "TZOKER": "https://www.opap.gr/en/web/opap-gr/tzoker-draw-results",
@@ -388,13 +395,14 @@ def fetch_online_history(game: str) -> Tuple[pd.DataFrame, str]:
         "AUSTRIAN_LOTTO": "https://www.win2day.at/lottery/lotto",
         "SWISS_LOTTO": "https://www.swisslos.ch/en/swisslotto/information/winning-numbers.html",
     }
+    api_endpoint = LOTTERY_METADATA.get(game, {}).get("api_endpoint")
     
-    if game not in urls:
+    if game not in urls and not api_endpoint:
         msg = f"No online source configured for {game}"
         logger.warning(msg)
         return pd.DataFrame(), msg
     
-    url = urls[game]
+    url = urls.get(game)
     
     # Rate limiter (shared across all fetch calls)
     if not hasattr(fetch_online_history, '_rate_limiter'):
@@ -421,7 +429,62 @@ def fetch_online_history(game: str) -> Tuple[pd.DataFrame, str]:
         response.raise_for_status()
         return response
     
+    def _parse_api_payload(payload, spec: GameSpec) -> pd.DataFrame:
+        """Parse API JSON payload into a normalized DataFrame."""
+        draws = payload.get("draws") if isinstance(payload, dict) else payload
+        if not isinstance(draws, list):
+            return pd.DataFrame()
+        records = []
+        needed_set = set(spec.cols)
+        for item in draws:
+            if not isinstance(item, dict):
+                continue
+            rec = {}
+            for col in spec.cols:
+                if col in item:
+                    rec[col] = item[col]
+            if "date" in item:
+                rec["date"] = item["date"]
+            if needed_set.issubset(rec.keys()):
+                records.append(rec)
+        if not records:
+            return pd.DataFrame()
+        df_api = pd.DataFrame(records)
+        df_api["date"] = pd.to_datetime(df_api.get("date"), errors="coerce")
+        return df_api
+
     try:
+        if api_endpoint:
+            def _fetch_api():
+                resp = requests.get(
+                    api_endpoint,
+                    timeout=NetworkConfig.REQUEST_TIMEOUT,
+                    verify=NetworkConfig.VERIFY_SSL,
+                )
+                resp.raise_for_status()
+                return resp
+
+            fetch_api_with_retry = retry_with_backoff(
+                _fetch_api,
+                max_retries=NetworkConfig.MAX_RETRIES,
+                initial_delay=NetworkConfig.INITIAL_RETRY_DELAY,
+                backoff_multiplier=NetworkConfig.RETRY_BACKOFF,
+                exceptions=(requests.exceptions.RequestException,),
+                logger=logger,
+            )
+            api_response = fetch_api_with_retry()
+            api_df = _parse_api_payload(api_response.json(), GAMES[game])
+            if not api_df.empty:
+                msg = f"Fetched {len(api_df)} draws from API {api_endpoint}"
+                logger.info(msg)
+                return api_df, msg
+            else:
+                logger.warning(f"API endpoint returned no data for {game}, falling back to scraping")
+
+        if not url:
+            msg = f"No HTML source configured for {game}"
+            return pd.DataFrame(), msg
+
         # Retry the fetch with exponential backoff
         fetch_with_retry = retry_with_backoff(
             _fetch,

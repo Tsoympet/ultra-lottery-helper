@@ -8,12 +8,14 @@ import sys
 import tempfile
 import shutil
 from datetime import datetime
+from pathlib import Path
 import pandas as pd
 
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from lottery_data_fetcher import LotteryDataFetcher, fetch_latest_draws
+from ultra_lottery_helper import GAMES, fetch_online_history, LOTTERY_METADATA
 
 
 class TestLotteryDataFetcher:
@@ -109,6 +111,75 @@ class TestLotteryDataFetcher:
         assert fetcher2.fetch_log['TZOKER']['rows_fetched'] == 150
         assert fetcher2.fetch_log['TZOKER']['status'] == 'success'
 
+    def test_api_integration_uses_json_payload(self, monkeypatch):
+        """Ensure API JSON is preferred when available."""
+        payload = {
+            "draws": [
+                {"date": "2020-01-01", "n1": 1, "n2": 2, "n3": 3, "n4": 4, "n5": 5, "joker": 6}
+            ]
+        }
+
+        class DummyResponse:
+            def __init__(self, data):
+                self._data = data
+
+            def raise_for_status(self):
+                return None
+
+            def json(self):
+                return self._data
+
+        monkeypatch.setattr("ultra_lottery_helper.requests.get", lambda *a, **k: DummyResponse(payload))
+        tzoker_meta = LOTTERY_METADATA.setdefault("TZOKER", {})
+        monkeypatch.setitem(tzoker_meta, "api_endpoint", "https://api.example.com/tzoker")
+        df, msg = fetch_online_history("TZOKER")
+        assert not df.empty
+        assert "API" in msg
+
+    def test_email_notification_on_failure(self, monkeypatch):
+        """Send email notification when fetch fails."""
+        monkeypatch.setattr("lottery_data_fetcher.fetch_online_history", lambda game: (pd.DataFrame(), "network down"))
+        fetcher = LotteryDataFetcher(data_root=self.test_data_root, alert_email="alerts@example.com")
+        success, msg = fetcher.fetch_lottery_data("TZOKER", force=True)
+        assert success is False
+        log_path = Path(self.test_data_root) / "notifications.json"
+        assert log_path.exists()
+
+    def test_webhook_triggered_on_success(self, monkeypatch):
+        """Post webhook after successful fetch."""
+        calls = []
+
+        def fake_post(url, json=None, timeout=None):
+            calls.append({"url": url, "json": json})
+
+            class Resp:
+                status_code = 200
+
+            return Resp()
+
+        fixed_date = datetime(2020, 1, 1)
+        df = pd.DataFrame(
+            [{"date": fixed_date, "n1": 1, "n2": 2, "n3": 3, "n4": 4, "n5": 5, "joker": 6}]
+        )
+        monkeypatch.setattr("lottery_data_fetcher.fetch_online_history", lambda game: (df, "ok"))
+        fetcher = LotteryDataFetcher(data_root=self.test_data_root, webhook_urls="https://webhook.example.com")
+        fetcher._http_post = fake_post
+        success, _ = fetcher.fetch_lottery_data("TZOKER", force=True)
+        assert success is True
+        assert calls and calls[0]["url"] == "https://webhook.example.com"
+
+    def test_anomaly_detection_blocks_bad_data(self, monkeypatch):
+        """Detect out-of-range numbers and block save."""
+        fixed_date = datetime(2020, 1, 1)
+        bad_df = pd.DataFrame(
+            [{"date": fixed_date, "n1": 99, "n2": 2, "n3": 3, "n4": 4, "n5": 5, "joker": 6}]
+        )
+        monkeypatch.setattr("lottery_data_fetcher.fetch_online_history", lambda game: (bad_df, "ok"))
+        fetcher = LotteryDataFetcher(data_root=self.test_data_root, alert_email="alerts@example.com")
+        success, msg = fetcher.fetch_lottery_data("TZOKER", force=True)
+        assert success is False
+        assert "Anomaly" in msg
+
 
 class TestFetchLatestDraws:
     """Test the convenience function."""
@@ -156,3 +227,18 @@ class TestIntegration:
             
             assert 'TEST' in data
             assert data['TEST']['rows_fetched'] == 50
+
+    def test_fetch_all_uses_stubbed_fetcher(self, monkeypatch):
+        """Ensure fetch_all iterates through games concurrently-safe."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            fetcher = LotteryDataFetcher(data_root=tmpdir, max_workers=2)
+            calls = []
+
+            def fake_fetch(game, force=False):
+                calls.append(game)
+                return True, f"{game} ok"
+
+            monkeypatch.setattr(fetcher, "fetch_lottery_data", fake_fetch)
+            results = fetcher.fetch_all_lotteries(force=True)
+            assert set(calls) == set(GAMES.keys())
+            assert set(results.keys()) == set(GAMES.keys())
