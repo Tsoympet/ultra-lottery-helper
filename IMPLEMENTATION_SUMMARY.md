@@ -188,10 +188,89 @@ All changes validated:
 From the original request, the following were NOT implemented as they are lower priority/long-term:
 
 ### Long-Term Enhancements
-- Enhanced Documentation (Sphinx, user guide, contribution guide)
-- Advanced Features (web dashboard, additional games, enhanced ML)
 
-These can be added in future iterations and were explicitly marked as "Future" in the original plan.
+#### Enhanced Documentation
+- Enhanced Documentation (Sphinx, user guide, contribution guide)
+- These can be added in future iterations and were explicitly marked as "Future" in the original plan.
+
+#### Advanced Features
+
+**Status:** 📋 Planned for Future Implementation
+
+The following advanced features are documented in CHANGELOG.md as "Unreleased" and are part of the long-term roadmap:
+
+##### 1. Web Dashboard
+**Planned Implementation:**
+- GitHub Pages integration for live guides and screenshots
+- Interactive web interface for users without desktop installation
+- Real-time lottery statistics visualization
+- Browser-based prediction interface
+- Responsive design for mobile and tablet access
+- Share prediction results via URL
+
+**Benefits:**
+- Lower barrier to entry (no installation required)
+- Cross-platform accessibility (any device with browser)
+- Easy sharing and collaboration
+- Real-time updates and guides
+
+**Technical Considerations:**
+- Could leverage existing Gradio UI components mentioned in v1.0.0
+- Static hosting via GitHub Pages for zero infrastructure cost
+- Client-side predictions or serverless API for backend
+- Progressive Web App (PWA) for offline functionality
+
+##### 2. Additional Lottery Games
+**Planned Implementation:**
+- Support for more international lottery games beyond TZOKER, LOTTO, EuroJackpot
+- Potential games: Powerball, Mega Millions, SuperEnalotto, UK National Lottery
+- Configurable game parameters (number ranges, ball counts, bonus balls)
+- Game-specific prediction strategies
+- Historical data integration for new games
+
+**Benefits:**
+- Broader user base and international appeal
+- Reuse existing prediction algorithms
+- Portfolio diversification for lottery players
+- Community contributions for regional games
+
+**Technical Considerations:**
+- Extensible game configuration system
+- Standardized data format for different games
+- Validation rules for game-specific constraints
+- Data source integration (official lottery APIs/feeds)
+
+##### 3. Enhanced ML Models
+**Planned Implementation:**
+- Advanced machine learning models beyond current ensemble (Prophet, LightGBM, Random Forest, XGBoost, SVM)
+- Deep learning models (LSTM, Transformer-based architectures)
+- Ensemble optimization and model selection
+- Hyperparameter auto-tuning
+- Transfer learning across different lottery games
+- Explainable AI for prediction insights
+
+**Benefits:**
+- Improved prediction accuracy
+- Better pattern recognition in historical data
+- Adaptive learning from recent draws
+- User transparency through model explanations
+
+**Technical Considerations:**
+- GPU acceleration for deep learning models
+- Model versioning and A/B testing framework
+- Performance vs. accuracy tradeoffs
+- Computational requirements for end users
+- Optional cloud-based inference for heavy models
+
+##### Implementation Priority
+These advanced features are marked as **lower priority** because:
+- Core functionality is complete and production-ready
+- Require significant development effort
+- Need additional infrastructure (hosting, data sources)
+- May introduce additional dependencies and complexity
+- Best implemented based on user feedback and demand
+
+**Timeline:** These features are candidates for version 7.0+ releases and can be implemented incrementally based on community interest and resource availability.
 
 ---
 
