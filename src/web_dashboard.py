@@ -711,7 +711,6 @@ def _asset_response(handler: BaseHTTPRequestHandler, request_path: str):
             root_resolved
         ):
             return _json_response(handler, {"error": "Asset not found"}, status=404)
-        return _json_response(handler, {"error": "Asset not found"}, status=404)
 
     if candidate.suffix.lower() in {".png", ".bmp"}:
         mime = "image/png" if candidate.suffix.lower() == ".png" else "image/bmp"
