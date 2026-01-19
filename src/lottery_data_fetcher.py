@@ -18,7 +18,7 @@ if os.path.dirname(__file__) not in sys.path:
     sys.path.insert(0, os.path.dirname(__file__))
 
 try:
-    from ultra_lottery_helper import (
+    from src.ultra_lottery_helper import (
         GAMES,
         LOTTERY_METADATA,
         fetch_online_history,

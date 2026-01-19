@@ -17,7 +17,7 @@ python -m ulh_learn_cli learn TZOKER --k 100 --replay 2
 """
 import argparse, json, sys
 from typing import List
-from ulh_learning import record_portfolio, record_outcome, learn_after_draw
+from src.ulh_learning import record_portfolio, record_outcome, learn_after_draw
 
 def parse_combo(s: str) -> List[int]:
     return [int(x) for x in s.replace(",", " ").split()]

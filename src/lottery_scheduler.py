@@ -27,8 +27,8 @@ if os.path.dirname(__file__) not in sys.path:
     sys.path.insert(0, os.path.dirname(__file__))
 
 try:
-    from lottery_data_fetcher import LotteryDataFetcher
-    from ultra_lottery_helper import GAMES, LOTTERY_METADATA
+    from src.lottery_data_fetcher import LotteryDataFetcher
+    from src.ultra_lottery_helper import GAMES, LOTTERY_METADATA
     CORE_AVAILABLE = True
 except ImportError as e:
     CORE_AVAILABLE = False

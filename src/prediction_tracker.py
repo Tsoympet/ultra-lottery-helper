@@ -20,7 +20,7 @@ if os.path.dirname(__file__) not in sys.path:
     sys.path.insert(0, os.path.dirname(__file__))
 
 try:
-    from ultra_lottery_helper import GAMES, LOTTERY_METADATA, _load_all_history
+    from src.ultra_lottery_helper import GAMES, LOTTERY_METADATA, _load_all_history
     CORE_AVAILABLE = True
 except ImportError as e:
     CORE_AVAILABLE = False
