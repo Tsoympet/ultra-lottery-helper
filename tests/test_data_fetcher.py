@@ -115,7 +115,7 @@ class TestLotteryDataFetcher:
         """Ensure API JSON is preferred when available."""
         payload = {
             "draws": [
-                {"date": "2026-01-01", "n1": 1, "n2": 2, "n3": 3, "n4": 4, "n5": 5, "joker": 6}
+                {"date": "2020-01-01", "n1": 1, "n2": 2, "n3": 3, "n4": 4, "n5": 5, "joker": 6}
             ]
         }
 
@@ -156,8 +156,9 @@ class TestLotteryDataFetcher:
 
             return Resp()
 
+        fixed_date = datetime(2020, 1, 1)
         df = pd.DataFrame(
-            [{"date": datetime.now(), "n1": 1, "n2": 2, "n3": 3, "n4": 4, "n5": 5, "joker": 6}]
+            [{"date": fixed_date, "n1": 1, "n2": 2, "n3": 3, "n4": 4, "n5": 5, "joker": 6}]
         )
         monkeypatch.setattr("lottery_data_fetcher.fetch_online_history", lambda game: (df, "ok"))
         fetcher = LotteryDataFetcher(data_root=self.test_data_root, webhook_urls="https://webhook.example.com")
@@ -168,8 +169,9 @@ class TestLotteryDataFetcher:
 
     def test_anomaly_detection_blocks_bad_data(self, monkeypatch):
         """Detect out-of-range numbers and block save."""
+        fixed_date = datetime(2020, 1, 1)
         bad_df = pd.DataFrame(
-            [{"date": datetime.now(), "n1": 99, "n2": 2, "n3": 3, "n4": 4, "n5": 5, "joker": 6}]
+            [{"date": fixed_date, "n1": 99, "n2": 2, "n3": 3, "n4": 4, "n5": 5, "joker": 6}]
         )
         monkeypatch.setattr("lottery_data_fetcher.fetch_online_history", lambda game: (bad_df, "ok"))
         fetcher = LotteryDataFetcher(data_root=self.test_data_root, alert_email="alerts@example.com")

@@ -97,8 +97,14 @@ class LotteryDataFetcher:
             NotificationManager(self.data_root) if NotificationManager else None
         )
         self._http_post = getattr(requests, "post", None)
-        self._load_json = load_json if 'load_json' in globals() else None
-        self._save_json = save_json if 'save_json' in globals() else None
+        try:
+            self._load_json = load_json if callable(load_json) else None  # type: ignore
+        except NameError:
+            self._load_json = None
+        try:
+            self._save_json = save_json if callable(save_json) else None  # type: ignore
+        except NameError:
+            self._save_json = None
     
     def _load_fetch_log(self) -> Dict:
         """Load the fetch log tracking when each lottery was last updated."""
@@ -167,9 +173,9 @@ class LotteryDataFetcher:
             try:
                 loader = getattr(self, "_load_json", None)
                 saver = getattr(self, "_save_json", None)
-                existing = loader(log_path, default=[], logger=logger) if loader else []
+                existing = loader(log_path, default=[], logger=logger) if callable(loader) else []
                 existing.append(entry)
-                if saver:
+                if callable(saver):
                     saver(log_path, existing, atomic=True, logger=logger)
                 else:
                     log_path.parent.mkdir(parents=True, exist_ok=True)

@@ -435,6 +435,7 @@ def fetch_online_history(game: str) -> Tuple[pd.DataFrame, str]:
         if not isinstance(draws, list):
             return pd.DataFrame()
         records = []
+        needed_set = set(spec.cols)
         for item in draws:
             if not isinstance(item, dict):
                 continue
@@ -444,7 +445,7 @@ def fetch_online_history(game: str) -> Tuple[pd.DataFrame, str]:
                     rec[col] = item[col]
             if "date" in item:
                 rec["date"] = item["date"]
-            if set(spec.cols).issubset(rec.keys()):
+            if needed_set.issubset(rec.keys()):
                 records.append(rec)
         if not records:
             return pd.DataFrame()
