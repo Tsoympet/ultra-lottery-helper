@@ -699,11 +699,17 @@ def _asset_response(handler: BaseHTTPRequestHandler, request_path: str):
     candidate = (ASSETS_ROOT / rel).resolve()
     if not candidate.exists():
         return _json_response(handler, {"error": "Asset not found"}, status=404)
+    candidate_resolved = candidate.resolve()
+    root_resolved = ASSETS_ROOT.resolve()
     try:
-        if not candidate.resolve().is_relative_to(ASSETS_ROOT.resolve()):
+        if not candidate_resolved.is_relative_to(root_resolved):
             return _json_response(handler, {"error": "Asset not found"}, status=404)
     except AttributeError:  # pragma: no cover - python <3.9 fallback
-        if str(ASSETS_ROOT.resolve()) not in str(candidate.resolve()):
+        import os
+
+        if os.path.commonpath([str(root_resolved), str(candidate_resolved)]) != str(
+            root_resolved
+        ):
             return _json_response(handler, {"error": "Asset not found"}, status=404)
         return _json_response(handler, {"error": "Asset not found"}, status=404)
 
