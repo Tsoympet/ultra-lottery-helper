@@ -51,7 +51,7 @@ jobs:
             import compileall, sys
             ok = compileall.compile_dir('src', maxlevels=10, force=True, quiet=1)
             sys.exit(0 if ok else 1)
-            PY
+PY
           fi
 
       - name: Smoke import — desktop UI (offscreen)
@@ -179,7 +179,7 @@ jobs:
             import compileall, sys
             ok = compileall.compile_dir('src', maxlevels=10, force=True, quiet=1)
             sys.exit(0 if ok else 1)
-            PY
+PY
           fi
 
       - name: Smoke import — desktop UI (offscreen)
