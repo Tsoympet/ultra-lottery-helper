@@ -372,7 +372,7 @@ mkdir -p data/history exports
 
 ## Additional Resources
 
-- [Main README](README.md) - Project overview and features
+- [Main README](../README.md) - Project overview and features
 - [SETUP.md](SETUP.md) - Detailed setup instructions
 - [DATA_FETCHER_README.md](DATA_FETCHER_README.md) - Data fetching documentation
 - [SCHEDULER_README.md](SCHEDULER_README.md) - Scheduling documentation

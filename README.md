@@ -4,8 +4,12 @@
 
 ### Professional Lottery Analysis & Prediction Platform
 
-[![CI](https://img.shields.io/badge/CI-passing-brightgreen)](#)
-[![Windows Installer](https://img.shields.io/badge/Windows-Installer-blue)](#)
+[![CI](https://github.com/Tsoympet/ultra-lottery-helper/actions/workflows/ci.yaml/badge.svg)](https://github.com/Tsoympet/ultra-lottery-helper/actions/workflows/ci.yaml)
+[![Build & Sign Release](https://github.com/Tsoympet/ultra-lottery-helper/actions/workflows/build-sign-release.yml/badge.svg)](https://github.com/Tsoympet/ultra-lottery-helper/actions/workflows/build-sign-release.yml)
+[![Windows Installer](https://github.com/Tsoympet/ultra-lottery-helper/actions/workflows/build-windows-installer.yaml/badge.svg)](https://github.com/Tsoympet/ultra-lottery-helper/actions/workflows/build-windows-installer.yaml)
+[![Release Checklist](https://github.com/Tsoympet/ultra-lottery-helper/actions/workflows/release-checklist.yml/badge.svg)](https://github.com/Tsoympet/ultra-lottery-helper/actions/workflows/release-checklist.yml)
+[![Run Lottery](https://github.com/Tsoympet/ultra-lottery-helper/actions/workflows/run-lottery.yml/badge.svg)](https://github.com/Tsoympet/ultra-lottery-helper/actions/workflows/run-lottery.yml)
+[![Dependency Scan](https://github.com/Tsoympet/ultra-lottery-helper/actions/workflows/dependency-scan.yml/badge.svg)](https://github.com/Tsoympet/ultra-lottery-helper/actions/workflows/dependency-scan.yml)
 [![Python](https://img.shields.io/badge/Python-3.10+-blue)](#)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](#)
 
@@ -16,6 +20,8 @@
 </div>
 
 ---
+
+![Client Screenshot](assets/main_window.png)
 
 ## πŸ"Œ Overview
 
@@ -82,7 +88,7 @@ View historical data, frequency distributions, number pair analysis, and recent 
 ### πŸ‡¨πŸ‡­ Switzerland
 - **Swiss Lotto** - 6 numbers (1-42) + 1 Lucky number (1-6)
 
-**Note**: All supported lotteries offer progressive jackpots. See [LOTTERY_RESULTS_SOURCES.md](LOTTERY_RESULTS_SOURCES.md) for official results URLs and detailed information.
+**Note**: All supported lotteries offer progressive jackpots. See [LOTTERY_RESULTS_SOURCES.md](docs/LOTTERY_RESULTS_SOURCES.md) for official results URLs and detailed information.
 
 ---
 
@@ -117,10 +123,10 @@ View historical data, frequency distributions, number pair analysis, and recent 
 - **A/B Testing Support** - Lift calculations and significance for strategy experiments
 
 ### Automation & Tracking
-- **βœ¨ AI Learning System** - Adaptive machine learning that improves predictions over time ([AI_SYSTEM_STATUS.md](AI_SYSTEM_STATUS.md))
-- **βœ¨ Live Data Feeds** - Automated fetching and storage of latest draw results ([DATA_FETCHER_README.md](DATA_FETCHER_README.md))
-- **βœ¨ Intelligent Scheduling** - Configurable periodic data fetching ([SCHEDULER_README.md](SCHEDULER_README.md))
-- **βœ¨ Prediction Tracking** - Save predictions, compare with results, track accuracy over time ([PREDICTION_TRACKER_README.md](PREDICTION_TRACKER_README.md))
+- **βœ¨ AI Learning System** - Adaptive machine learning that improves predictions over time ([AI_SYSTEM_STATUS.md](docs/AI_SYSTEM_STATUS.md))
+- **βœ¨ Live Data Feeds** - Automated fetching and storage of latest draw results ([DATA_FETCHER_README.md](docs/DATA_FETCHER_README.md))
+- **βœ¨ Intelligent Scheduling** - Configurable periodic data fetching ([SCHEDULER_README.md](docs/SCHEDULER_README.md))
+- **βœ¨ Prediction Tracking** - Save predictions, compare with results, track accuracy over time ([PREDICTION_TRACKER_README.md](docs/PREDICTION_TRACKER_README.md))
 
 ### Performance & Deployment
 - **Plot Caching** - Optimized visualization rendering
@@ -153,7 +159,7 @@ View historical data, frequency distributions, number pair analysis, and recent 
 
 ### Developer Setup
 
-For detailed development instructions, see [SETUP.md](SETUP.md).
+For detailed development instructions, see [SETUP.md](docs/SETUP.md).
 
 **Quick Start:**
 ```bash
@@ -189,7 +195,7 @@ docker run --rm -v $(pwd)/data:/app/data -v $(pwd)/exports:/app/exports \
 # Or use Docker Compose
 docker-compose up oracle-lottery
 
-# For detailed Docker and CMake instructions, see DOCKER_CMAKE_README.md
+# For detailed Docker and CMake instructions, see docs/DOCKER_CMAKE_README.md
 ```
 
 ### Web Dashboard, Metrics, and Notifications
@@ -235,7 +241,7 @@ python src/lottery_data_fetcher.py --game EUROJACKPOT
 python src/lottery_data_fetcher.py --status
 ```
 
-For complete documentation, see [DATA_FETCHER_README.md](DATA_FETCHER_README.md).
+For complete documentation, see [DATA_FETCHER_README.md](docs/DATA_FETCHER_README.md).
 
 ### Automated Scheduling
 
@@ -252,7 +258,7 @@ python src/lottery_scheduler.py --start
 python src/lottery_scheduler.py --status
 ```
 
-For complete documentation, see [SCHEDULER_README.md](SCHEDULER_README.md).
+For complete documentation, see [SCHEDULER_README.md](docs/SCHEDULER_README.md).
 
 ### Prediction Tracking
 
@@ -279,7 +285,7 @@ python src/prediction_tracker.py --stats
 python src/prediction_tracker.py --pending
 ```
 
-For complete documentation, see [PREDICTION_TRACKER_README.md](PREDICTION_TRACKER_README.md).
+For complete documentation, see [PREDICTION_TRACKER_README.md](docs/PREDICTION_TRACKER_README.md).
 
 ### AI Learning System
 
@@ -302,7 +308,7 @@ The AI system automatically adapts:
 - Memory half-life
 - Based on actual prediction performance
 
-For complete documentation, see [AI_SYSTEM_STATUS.md](AI_SYSTEM_STATUS.md).
+For complete documentation, see [AI_SYSTEM_STATUS.md](docs/AI_SYSTEM_STATUS.md).
 
 ---
 
@@ -384,17 +390,17 @@ The project includes automated build pipelines:
 
 ## πŸ"š Documentation
 
-- [SETUP.md](SETUP.md) - Detailed development setup instructions
-- [CHANGELOG.md](CHANGELOG.md) - Version history and changes
-- [DATA_FETCHER_README.md](DATA_FETCHER_README.md) - Automated data fetching guide
-- [SCHEDULER_README.md](SCHEDULER_README.md) - Scheduling system documentation
-- [PREDICTION_TRACKER_README.md](PREDICTION_TRACKER_README.md) - Prediction tracking guide
-- [AI_SYSTEM_STATUS.md](AI_SYSTEM_STATUS.md) - AI learning system documentation
-- [DOCKER_CMAKE_README.md](DOCKER_CMAKE_README.md) - Docker and CMake build instructions
-- [LOTTERY_RESULTS_SOURCES.md](LOTTERY_RESULTS_SOURCES.md) - Official lottery results sources
-- [README_CI.md](README_CI.md) - CI/CD pipeline documentation
-- [README_SIGNING.md](README_SIGNING.md) - Code signing information
-- [RELEASE-CHECKLIST.md](RELEASE-CHECKLIST.md) - Release process checklist
+- [SETUP.md](docs/SETUP.md) - Detailed development setup instructions
+- [CHANGELOG.md](docs/CHANGELOG.md) - Version history and changes
+- [DATA_FETCHER_README.md](docs/DATA_FETCHER_README.md) - Automated data fetching guide
+- [SCHEDULER_README.md](docs/SCHEDULER_README.md) - Scheduling system documentation
+- [PREDICTION_TRACKER_README.md](docs/PREDICTION_TRACKER_README.md) - Prediction tracking guide
+- [AI_SYSTEM_STATUS.md](docs/AI_SYSTEM_STATUS.md) - AI learning system documentation
+- [DOCKER_CMAKE_README.md](docs/DOCKER_CMAKE_README.md) - Docker and CMake build instructions
+- [LOTTERY_RESULTS_SOURCES.md](docs/LOTTERY_RESULTS_SOURCES.md) - Official lottery results sources
+- [README_CI.md](docs/README_CI.md) - CI/CD pipeline documentation
+- [README_SIGNING.md](docs/README_SIGNING.md) - Code signing information
+- [RELEASE-CHECKLIST.md](docs/RELEASE-CHECKLIST.md) - Release process checklist
 
 ---
 
