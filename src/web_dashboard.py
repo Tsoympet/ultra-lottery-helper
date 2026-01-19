@@ -70,7 +70,9 @@ def _load_latest_draw(data_dir: Path) -> Optional[Dict[str, Any]]:
 
     csv_files: List[Path] = sorted(data_dir.glob("*.csv"))
     if not csv_files:
-        csv_files = sorted(data_dir.rglob("*.csv"))
+        # Shallow search in immediate subdirectories to avoid deep traversal cost
+        for subdir in sorted(p for p in data_dir.iterdir() if p.is_dir()):
+            csv_files.extend(sorted(subdir.glob("*.csv")))
     for csv_file in reversed(csv_files):
         try:
             with csv_file.open("r", encoding="utf-8") as f:
@@ -89,8 +91,8 @@ def _load_latest_draw(data_dir: Path) -> Optional[Dict[str, Any]]:
                 try:
                     numbers.append(int(value))
                 except (TypeError, ValueError):
-                    if value:
-                        numbers.append(value)
+                    # Skip non-numeric tokens to keep list consistent
+                    continue
             return {"date": date, "numbers": numbers, "source": csv_file.name}
     return None
 
@@ -101,13 +103,16 @@ def _prediction_status(history_root: Path, game: str) -> Dict[str, Any]:
     results = load_json(history_root / "prediction_results.json", default={}, logger=LOGGER)
 
     pending = len(predictions.get(game, [])) if isinstance(predictions, dict) else 0
-    game_results = results.get(game, []) if isinstance(results, dict) else []
+    game_results = results.get(game, {}) if isinstance(results, dict) else {}
     if isinstance(game_results, dict):
         accuracy = game_results.get("accuracy")
         completed = game_results.get("completed", 0)
+    elif isinstance(game_results, list):
+        accuracy = None
+        completed = len(game_results)
     else:
         accuracy = None
-        completed = len(game_results) if isinstance(game_results, list) else 0
+        completed = 0
 
     return {
         "pending": pending,
@@ -668,7 +673,7 @@ def _index_html() -> bytes:
   </script>
 </body>
 </html>"""
-    return html.replace("{{", "{").replace("}}", "}").encode("utf-8")
+    return html.encode("utf-8")
 
 
 def _json_response(handler: BaseHTTPRequestHandler, payload: Any, status: int = 200):
@@ -692,7 +697,14 @@ def _asset_response(handler: BaseHTTPRequestHandler, request_path: str):
     """Serve small static assets (icons/flags)."""
     rel = request_path[len("/assets/") :] if request_path.startswith("/assets/") else ""
     candidate = (ASSETS_ROOT / rel).resolve()
-    if not str(candidate).startswith(str(ASSETS_ROOT.resolve())) or not candidate.exists():
+    if not candidate.exists():
+        return _json_response(handler, {"error": "Asset not found"}, status=404)
+    try:
+        if not candidate.resolve().is_relative_to(ASSETS_ROOT.resolve()):
+            return _json_response(handler, {"error": "Asset not found"}, status=404)
+    except AttributeError:  # pragma: no cover - python <3.9 fallback
+        if str(ASSETS_ROOT.resolve()) not in str(candidate.resolve()):
+            return _json_response(handler, {"error": "Asset not found"}, status=404)
         return _json_response(handler, {"error": "Asset not found"}, status=404)
 
     if candidate.suffix.lower() in {".png", ".bmp"}:
