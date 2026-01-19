@@ -24,8 +24,8 @@ except ImportError:
 
 # Import core functionality
 try:
-    import ultra_lottery_helper as ulh
-    from ulh_learning import learn_after_draw
+    import src.ultra_lottery_helper as ulh
+    from src.ulh_learning import learn_after_draw
     CORE_AVAILABLE = True
 except ImportError:
     CORE_AVAILABLE = False

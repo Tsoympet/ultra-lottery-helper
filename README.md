@@ -72,6 +72,9 @@ Now ships as a **native desktop app (PySide6)** β€” no browser, no local se
 - Download `ultra_lottery_helper.exe`, optionally place a `data/` folder next to it, then double-click to run.
 
 ### Dev (Python)
+For detailed development setup instructions, see [SETUP.md](SETUP.md).
+
+Quick start:
 ```bash
 python -m venv .venv
 # Windows
@@ -79,7 +82,12 @@ python -m venv .venv
 # Linux/Mac
 source .venv/bin/activate
 
-pip install -r requirements.txt
+pip install --upgrade pip
+pip install -e .
+
+# Run the application
+oracle-lottery
+# Or
 python src/ulh_desktop.py
 ```
 

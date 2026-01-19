@@ -46,7 +46,7 @@ from typing import List, Dict, Tuple, Optional
 import numpy as np
 import pandas as pd
 
-from ultra_lottery_helper import (
+from src.ultra_lottery_helper import (
     Config, GAMES, generate_candidates, apply_ev_rerank,
     expected_value_for_ticket, self_learning_replay, _load_all_history
 )
