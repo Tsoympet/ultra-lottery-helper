@@ -104,8 +104,8 @@ class TestConfig:
             "n2": np.random.randint(11, 20, 50),
             "n3": np.random.randint(21, 30, 50),
             "n4": np.random.randint(31, 40, 50),
-            "n5": np.random.randint(41, 48, 50),
-            "n6": np.random.randint(1, 49, 50),
+            "n5": np.random.randint(41, 50, 50),
+            "n6": np.random.randint(1, 50, 50),
         }
         df = pd.DataFrame(data)
         cfg.set_adaptive_constraints(df, spec)

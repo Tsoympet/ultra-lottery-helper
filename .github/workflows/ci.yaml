@@ -122,13 +122,13 @@ try:\n importlib.import_module('PySide6')\nexcept Exception:\n subprocess.check_
         shell: pwsh
         run: |
           pip install bandit[toml]
-          bandit -r src/ || echo "Bandit found security issues"
+          bandit -r src/
       
       - name: Dependency security check with safety
         shell: pwsh
         run: |
           pip install safety
-          safety check || echo "Safety found vulnerable dependencies"
+          safety check
 
   macos:
     name: macOS (${{ matrix.image }}, Py${{ matrix.python-version }})
@@ -195,9 +195,9 @@ try:\n importlib.import_module('PySide6')\nexcept Exception:\n subprocess.check_
       - name: Security scan with bandit (macOS)
         run: |
           pip install bandit[toml]
-          bandit -r src/ || echo "Bandit found security issues"
+          bandit -r src/
       
       - name: Dependency security check with safety (macOS)
         run: |
           pip install safety
-          safety check || echo "Safety found vulnerable dependencies"
+          safety check

@@ -18,7 +18,10 @@ Oracle Lottery Predictor — Offline Suite (Native-Core)
 - No Gradio dependencies (pure core for native desktop/CLI)
 """
 
-from __version__ import __version__
+try:
+    from .__version__ import __version__
+except (ImportError, ValueError):
+    __version__ = "6.3.0"
 
 import os
 import math
