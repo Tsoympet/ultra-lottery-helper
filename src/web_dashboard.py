@@ -43,6 +43,7 @@ class MetricsCollector:
 
     def __init__(self, data_root: Optional[Path] = None):
         self.data_root = Path(data_root) if data_root else _default_data_root()
+        self.data_root.mkdir(parents=True, exist_ok=True)
         self.metrics_file = self.data_root / "metrics.json"
         self._metrics = load_json(
             self.metrics_file, default={"counters": {}, "events": []}, logger=LOGGER
@@ -84,6 +85,7 @@ class NotificationManager:
 
     def __init__(self, data_root: Optional[Path] = None):
         self.data_root = Path(data_root) if data_root else _default_data_root()
+        self.data_root.mkdir(parents=True, exist_ok=True)
         self.log_file = self.data_root / "notifications.json"
         self._log = load_json(self.log_file, default=[], logger=LOGGER)
 

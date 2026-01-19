@@ -63,13 +63,14 @@ def test_notification_history_and_logging():
 
 def test_dashboard_state_updates_config_when_scheduler_present():
     fake = FakeScheduler()
-    state = DashboardState(scheduler=fake, data_root=Path(tempfile.mkdtemp()))
+    with tempfile.TemporaryDirectory() as tmpdir:
+        state = DashboardState(scheduler=fake, data_root=Path(tmpdir))
 
-    updated = state.update_config({"default_interval_hours": 6, "enabled": True})
+        updated = state.update_config({"default_interval_hours": 6, "enabled": True})
 
-    assert updated["default_interval_hours"] == 6
-    assert updated["enabled"] is True
-    assert fake.saved is True
+        assert updated["default_interval_hours"] == 6
+        assert updated["enabled"] is True
+        assert fake.saved is True
 
 
 def test_dashboard_state_status_includes_metrics_and_notifications():
