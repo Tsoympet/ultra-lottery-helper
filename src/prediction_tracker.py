@@ -59,9 +59,10 @@ except ImportError as e:
         else:
             with open(path, 'w', encoding='utf-8') as f:
                 json.dump(data, f, indent=2)
-    def validate_range(value, min_val, max_val, name="value"):
+    def _fallback_validate_range(value, min_val, max_val, name="value"):
         if not min_val <= value <= max_val:
             raise ValueError(f"{name} must be between {min_val} and {max_val}, got {value}")
+    validate_range = _fallback_validate_range
 
 logger = get_logger('prediction_tracker')
 
