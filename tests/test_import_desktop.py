@@ -1,7 +1,5 @@
 import ctypes.util
 import os
-import shutil
-import subprocess
 import sys
 import warnings
 import importlib.util
@@ -15,9 +13,8 @@ os.environ.setdefault("LIBGL_ALWAYS_SOFTWARE", "1")
 def _ensure_egl_runtime():
     """
     Best-effort helper to make EGL runtime available for PySide6 imports in headless
-    environments. It only attempts installation when ULH_AUTO_INSTALL_EGL is set and may
-    run privileged package installs; enable only in trusted CI environments with
-    controlled sudo configuration (ULH_AUTO_INSTALL_EGL=ci-sudo-ok).
+    environments. When ULH_AUTO_INSTALL_EGL is set in CI it emits a warning if libEGL
+    is missing so CI images can preinstall libegl1/libgl1 explicitly.
     """
     if ctypes.util.find_library("EGL"):
         return
@@ -25,34 +22,9 @@ def _ensure_egl_runtime():
     ci_context = os.environ.get("CI", "").lower() in {"1", "true", "yes"}
     if not (auto_install and ci_context):
         return
-    apt = shutil.which("apt-get")
-    sudo = shutil.which("sudo")
-    if not (apt and sudo):
-        # Skip silently when package manager is unavailable to keep tests portable.
-        return
-    try:
-        subprocess.run(
-            [sudo, "-n", apt, "update"],
-            check=False,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            timeout=60,
-        )
-        subprocess.run(
-            [sudo, "-n", apt, "install", "-y", "libegl1", "libgl1"],
-            check=False,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            timeout=60,
-        )
-    except (subprocess.TimeoutExpired, subprocess.SubprocessError, PermissionError):
-        warnings.warn("Automatic libegl1/libgl1 installation failed; install manually if needed.")
-        return
-    except FileNotFoundError:
-        warnings.warn("Package manager binaries not found; install libegl1/libgl1 manually.")
-        return
-    if ctypes.util.find_library("EGL") is None:
-        warnings.warn("libEGL installation attempt failed; ensure libegl1/libgl1 are installed.")
+    warnings.warn(
+        "libEGL runtime missing; install libegl1/libgl1 in CI image or set ULH_AUTO_INSTALL_EGL=ci-sudo-ok only after preinstalling dependencies."
+    )
 
 
 @pytest.mark.skipif(
