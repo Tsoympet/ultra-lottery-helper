@@ -37,6 +37,8 @@ except ImportError:
     print("Warning: Core lottery helper not available. Some features may not work.")
     # Fallback
     import logging
+    import json as _json  # ensure json available in fallback paths
+    json = _json
     get_logger = lambda name: logging.getLogger(name)
     NotificationManager = None  # type: ignore
     try:
@@ -115,10 +117,11 @@ class LotteryDataFetcher:
         if missing:
             anomalies.append(f"Missing columns {missing}")
 
-        for col in spec.cols[: spec.main_pick]:
-            if col in df.columns:
-                if not df[col].between(1, spec.main_max, inclusive="both").all():
-                    anomalies.append(f"{col} out of range")
+        main_cols = [c for c in spec.cols[: spec.main_pick] if c in df.columns]
+        if main_cols:
+            main_valid = df[main_cols].apply(lambda col: col.between(1, spec.main_max, inclusive="both")).all().all()
+            if not main_valid:
+                anomalies.append("main numbers out of range")
         if spec.sec_pick == 1:
             if "joker" not in df.columns:
                 anomalies.append("joker missing")
@@ -194,13 +197,14 @@ class LotteryDataFetcher:
             except Exception as exc:
                 logger.warning(f"Webhook POST to {url} failed: {exc}")
     
-    def fetch_lottery_data(self, game: str, force: bool = False) -> Tuple[bool, str]:
+    def fetch_lottery_data(self, game: str, force: bool = False, raise_on_unknown: bool = False) -> Tuple[bool, str]:
         """
         Fetch latest data for a specific lottery.
         
         Args:
             game: Lottery name (e.g., "TZOKER", "UK_NATIONAL_LOTTERY")
             force: Force fetch even if recently updated
+            raise_on_unknown: If True, raise ValueError for unknown lotteries instead of returning a failure tuple
         
         Returns:
             (success, message) tuple
@@ -208,6 +212,8 @@ class LotteryDataFetcher:
         if game not in GAMES:
             msg = f"Unknown lottery: {game}"
             logger.error(msg)
+            if raise_on_unknown:
+                raise ValueError(msg)
             return False, msg
         
         # Check if we need to fetch (avoid too frequent requests)
@@ -275,6 +281,8 @@ class LotteryDataFetcher:
                 game, result = future.result()
                 results[game] = result
                 print(result[1])
+                if result[0]:
+                    time.sleep(0.5)
 
         return results
     

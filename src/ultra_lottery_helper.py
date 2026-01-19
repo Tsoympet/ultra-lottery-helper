@@ -479,9 +479,6 @@ def fetch_online_history(game: str) -> Tuple[pd.DataFrame, str]:
                 return api_df, msg
             else:
                 logger.warning(f"API endpoint returned no data for {game}, falling back to scraping")
-            if game not in urls:
-                msg = f"No HTML source configured for {game} and API returned no data"
-                return pd.DataFrame(), msg
 
         if not url:
             msg = f"No HTML source configured for {game}"
