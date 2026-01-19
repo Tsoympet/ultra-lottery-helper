@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Callable, Iterable, List, Sequence, Tuple
+from typing import Callable, List, Sequence, Tuple
 
 import numpy as np
 import pandas as pd
@@ -61,7 +61,7 @@ def transformer_sequence_predict(
     for _ in range(max(1, steps)):
         context = arr[-max_context:]
         query = context[-1]
-        # scaled dot-product attention
+        # Scaled dot-product attention
         logits = context @ query / (math.sqrt(query.shape[0]) + 1e-8)
         weights = np.exp(logits - logits.max())
         weights = weights / weights.sum()
@@ -85,7 +85,7 @@ def neural_ensemble(predictions: Sequence[Sequence[float]], weights: Sequence[fl
     else:
         w = np.asarray(weights, dtype=float)
         if w.size != preds.shape[0]:
-            raise ValueError("weights length must match number of predictions")
+            raise ValueError(f"Number of weights ({w.size}) must match number of predictions ({preds.shape[0]})")
     w = w / w.sum()
     combined = (preds.T @ w).astype(float)
     return combined.tolist()
@@ -145,22 +145,26 @@ def genetic_optimize(
     fitness_fn: Callable[[Sequence[float]], float],
     generations: int = 5,
     mutation_rate: float = 0.1,
+    seed: int | None = None,
 ) -> List[float]:
     """
     Simple genetic algorithm for parameter search.
     """
     if not population:
         return []
-    rng = np.random.default_rng(42)
+    rng = np.random.default_rng(seed)
     pop = [np.asarray(ind, dtype=float) for ind in population]
+    if not pop or len(pop[0]) == 0:
+        return []
     genome_length = len(pop[0])
     for _ in range(max(1, generations)):
         scores = sorted(((fitness_fn(ind), ind) for ind in pop), key=lambda x: x[0], reverse=True)
-        elites = [ind for _, ind in scores[: max(2, len(scores) // 2)]]
+        elites = [ind for _, ind in scores[: max(2, len(scores) // 2)]] or pop
         children: List[np.ndarray] = []
         while len(children) < len(pop):
-            p1, p2 = rng.choice(elites, 2, replace=True)
-            cut = int(rng.integers(1, genome_length))
+            idx1, idx2 = rng.choice(len(elites), 2, replace=True)
+            p1, p2 = elites[int(idx1)], elites[int(idx2)]
+            cut = 1 if genome_length <= 1 else int(rng.integers(1, genome_length))
             child = np.concatenate([p1[:cut], p2[cut:]])
             # mutation
             mask = rng.random(genome_length) < mutation_rate
@@ -184,6 +188,8 @@ def cross_validate_sequences(
 ) -> dict:
     """
     Basic K-fold cross-validation returning MAE across folds.
+    Uses the first sample of each test fold as the hold-out target to
+    keep evaluation lightweight for sequence predictors.
     """
     data = list(dataset)
     if len(data) < 2 or folds < 2:
@@ -197,15 +203,18 @@ def cross_validate_sequences(
         if not test or not train:
             continue
         preds = model_fn(train)
-        target = np.mean(np.asarray(test, dtype=float), axis=0)
+        if not preds:
+            continue
+        target = np.asarray(test[0], dtype=float)
         pred = np.asarray(preds[-1], dtype=float)
         maes.append(float(np.mean(np.abs(pred - target))))
     return {"folds": len(maes), "mae": float(np.mean(maes)) if maes else None}
 
 
 def backtest_strategy(
-    history: Sequence[Sequence[int]],
-    predictor_fn: Callable[[Sequence[Sequence[int]]], Sequence[Sequence[int]]],
+    history: Sequence[Sequence[float]],
+    predictor_fn: Callable[[Sequence[Sequence[float]]], Sequence[Sequence[float]]],
+    tolerance: float = 0.5,
 ) -> dict:
     """
     Walk-forward backtesting that measures hit rate across steps.
@@ -217,10 +226,16 @@ def backtest_strategy(
     for i in range(1, len(history)):
         past = history[:i]
         preds = predictor_fn(past)
-        pred = preds[-1]
-        actual = set(history[i])
-        hits += sum(1 for x in pred if x in actual)
-        trials += len(pred)
+        if not preds:
+            continue
+        pred = np.asarray(preds[-1], dtype=float)
+        actual = np.asarray(history[i], dtype=float)
+        min_len = min(len(pred), len(actual))
+        if min_len == 0:
+            continue
+        matches = np.isclose(pred[:min_len], actual[:min_len], atol=tolerance)
+        hits += int(matches.sum())
+        trials += min_len
     rate = hits / trials if trials else 0.0
     return {"trials": trials, "avg_hit_rate": rate}
 
@@ -241,8 +256,8 @@ def statistical_significance_test(
     if se == 0:
         return {"z_score": 0.0, "p_value": 1.0}
     z = (p2 - p1) / se
-    # two-tailed from normal CDF
-    p_value = 2 * (1 - 0.5 * (1 + math.erf(abs(z) / math.sqrt(2))))
+    # Two-tailed from normal CDF via complementary error function
+    p_value = math.erfc(abs(z) / math.sqrt(2))
     return {"z_score": z, "p_value": p_value}
 
 
@@ -273,7 +288,7 @@ def feature_importance_from_frequency(
     else:
         df = pd.DataFrame(features)
     df = df.iloc[: len(outcomes)].copy()
-    df["outcome"] = list(outcomes)[: len(df)]
+    df["outcome"] = pd.Series(outcomes).iloc[: len(df)]
     corr = df.corr(numeric_only=True).get("outcome")
     if corr is None:
         return {}
@@ -297,7 +312,7 @@ def ab_test_summary(
     Summarizes A/B performance deltas with simple lift and significance proxy.
     """
     if not control or not variant:
-        return {"lift": 0.0, "control_mean": 0.0, "variant_mean": 0.0}
+        return {"lift": 0.0, "control_mean": 0.0, "variant_mean": 0.0, "p_value": 1.0}
     c_mean = float(np.mean(control))
     v_mean = float(np.mean(variant))
     lift = v_mean - c_mean
@@ -308,4 +323,3 @@ def ab_test_summary(
         "lift": lift,
         "p_value": sig["p_value"],
     }
-

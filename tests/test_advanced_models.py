@@ -51,14 +51,16 @@ def test_reinforcement_and_bandit_updates():
 
 def test_genetic_optimize_prefers_higher_fitness():
     population = [[0.0, 0.0], [1.0, 1.0], [2.0, 2.0]]
-    fitness = lambda x: float(np.sum(x))
-    best = genetic_optimize(population, fitness_fn=fitness, generations=3)
+    def fitness_fn(x):
+        return float(np.sum(x))
+
+    best = genetic_optimize(population, fitness_fn=fitness_fn, generations=3, seed=42)
     assert len(best) == 2
-    assert fitness(best) >= 3.5
+    assert fitness_fn(best) >= 3.5
 
 
 def test_cross_validation_and_backtesting():
-    dataset = [[1, 2], [2, 3], [3, 4], [4, 5]]
+    dataset = [[1.0, 2.0], [2.0, 3.0], [3.0, 4.0], [4.0, 5.0]]
     cv = cross_validate_sequences(dataset, lambda d: lstm_sequence_predict(d, steps=1), folds=2)
     assert cv["folds"] > 0
     assert cv["mae"] is not None
@@ -89,4 +91,3 @@ def test_significance_confidence_explainability_and_ab():
     ab = ab_test_summary([0.1, 0.2], [0.15, 0.25])
     assert "p_value" in ab
     assert ab["variant_mean"] > ab["control_mean"]
-
