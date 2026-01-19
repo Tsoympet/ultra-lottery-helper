@@ -374,8 +374,14 @@ def main():
         else:
             win = MainWindow()
             win.show()
-    except Exception:
-        # Fallback if splash fails
+    except (FileNotFoundError, IOError) as e:
+        # Fallback if splash image fails to load
+        logger.warning(f"Could not load splash screen: {e}")
+        win = MainWindow()
+        win.show()
+    except Exception as e:
+        # Unexpected error during startup
+        logger.exception(f"Error during application startup: {e}")
         win = MainWindow()
         win.show()
     
