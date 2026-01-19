@@ -5,12 +5,14 @@ Automated Lottery Data Fetcher - Live Feed Module
 Fetches latest draw results from official lottery sources and stores them locally.
 """
 
+import json
 import os
 import sys
 import time
-import json
 from datetime import datetime, timedelta
-from typing import Dict, List, Tuple, Optional
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+
 import pandas as pd
 
 # Add src to path if needed
@@ -19,16 +21,22 @@ if os.path.dirname(__file__) not in sys.path:
 
 try:
     from src.ultra_lottery_helper import (
+        DATA_ROOT,
         GAMES,
         LOTTERY_METADATA,
-        fetch_online_history,
         _game_path,
-        DATA_ROOT,
+        fetch_online_history,
     )
+    from src.utils import get_logger, load_json, save_json
     CORE_AVAILABLE = True
 except ImportError:
     CORE_AVAILABLE = False
     print("Warning: Core lottery helper not available. Some features may not work.")
+    # Fallback
+    import logging
+    get_logger = lambda name: logging.getLogger(name)
+
+logger = get_logger('lottery_data_fetcher')
 
 
 class LotteryDataFetcher:
@@ -45,23 +53,11 @@ class LotteryDataFetcher:
     
     def _load_fetch_log(self) -> Dict:
         """Load the fetch log tracking when each lottery was last updated."""
-        if os.path.exists(self.fetch_log_file):
-            try:
-                with open(self.fetch_log_file, 'r') as f:
-                    return json.load(f)
-            except Exception as e:
-                print(f"Error loading fetch log: {e}")
-                return {}
-        return {}
+        return load_json(self.fetch_log_file, default={}, logger=logger)
     
     def _save_fetch_log(self):
-        """Save the fetch log."""
-        os.makedirs(os.path.dirname(self.fetch_log_file), exist_ok=True)
-        try:
-            with open(self.fetch_log_file, 'w') as f:
-                json.dump(self.fetch_log, f, indent=2)
-        except Exception as e:
-            print(f"Error saving fetch log: {e}")
+        """Save the fetch log with atomic write."""
+        save_json(self.fetch_log_file, self.fetch_log, atomic=True, logger=logger)
     
     def fetch_lottery_data(self, game: str, force: bool = False) -> Tuple[bool, str]:
         """
@@ -73,9 +69,12 @@ class LotteryDataFetcher:
         
         Returns:
             (success, message) tuple
+            
+        Raises:
+            ValueError: If game is unknown
         """
         if game not in GAMES:
-            return False, f"Unknown lottery: {game}"
+            raise ValueError(f"Unknown lottery: {game}")
         
         # Check if we need to fetch (avoid too frequent requests)
         last_fetch = self.fetch_log.get(game, {}).get('last_fetch')
