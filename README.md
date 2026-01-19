@@ -47,6 +47,7 @@ Now ships as a **native desktop app (PySide6)** β€” no browser, no local se
 ## Features
 - Offline by default; optional online fetch
 - **βœ¨ NEW: Automated Live Feed** - Fetch and store latest draw results automatically (see [DATA_FETCHER_README.md](DATA_FETCHER_README.md))
+- **βœ¨ NEW: Automated Scheduling** - Schedule periodic data fetching with configurable intervals (see [SCHEDULER_README.md](SCHEDULER_README.md))
 - Auto-merge histories from `data/history/<game>/` (CSV/XLS/XLSX)
 - Diagnostics: frequency, recency, last-digits, pairs heatmap, odd/even
 - Modeling: EWMA, BMA, adaptive luck/unluck, optional ML
@@ -92,6 +93,23 @@ python src/lottery_data_fetcher.py --game EUROJACKPOT
 python src/lottery_data_fetcher.py --status
 
 # See full documentation
+cat DATA_FETCHER_README.md
+```
+
+### Automated Scheduling (New!)
+```bash
+# Enable automated fetching for all lotteries (every 12 hours)
+python src/lottery_scheduler.py --enable-all
+
+# Start the scheduler (runs continuously)
+python src/lottery_scheduler.py --start
+
+# Check scheduler status
+python src/lottery_scheduler.py --status
+
+# See full documentation
+cat SCHEDULER_README.md
+```
 cat DATA_FETCHER_README.md
 ```
 
