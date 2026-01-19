@@ -9,7 +9,7 @@ import tempfile
 import shutil
 from datetime import datetime, timedelta
 
-from prediction_tracker import PredictionTracker
+from prediction_tracker import PredictionTracker, SHARED_POOL_GAMES
 from ultra_lottery_helper import GAMES
 
 
@@ -249,7 +249,7 @@ class TestPredictionTracker:
         sec_numbers = []
         if spec.sec_pick:
             pool = list(range(1, spec.sec_max + 1))
-            if game in self.tracker.SHARED_POOL_GAMES:
+            if game in SHARED_POOL_GAMES:
                 pool = [n for n in pool if n not in main_numbers]
             sec_numbers = pool[: spec.sec_pick]
         numbers = main_numbers + sec_numbers

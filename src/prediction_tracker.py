@@ -79,7 +79,6 @@ class PredictionTracker:
     Tracks lottery predictions and compares them with actual draw results.
     Provides accuracy metrics and performance analysis.
     """
-    SHARED_POOL_GAMES: Set[str] = SHARED_POOL_GAMES
     
     def __init__(self, data_root: str = None):
         """
