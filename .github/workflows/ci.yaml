@@ -78,10 +78,10 @@ jobs:
           pip install bandit[toml]
           bandit -r src/
       
-      - name: Dependency security check with safety
+      - name: Dependency security check with pip-audit
         run: |
-          pip install safety
-          safety check
+          pip install pip-audit
+          pip-audit -r requirements.txt -r requirements-dev.txt
 
   windows:
     name: Windows (Py${{ matrix.python-version }})
@@ -134,11 +134,11 @@ try:\n importlib.import_module('PySide6')\nexcept Exception:\n subprocess.check_
           pip install bandit[toml]
           bandit -r src/
       
-      - name: Dependency security check with safety
+      - name: Dependency security check with pip-audit
         shell: pwsh
         run: |
-          pip install safety
-          safety check
+          pip install pip-audit
+          pip-audit -r requirements.txt -r requirements-dev.txt
 
   macos:
     name: macOS (${{ matrix.image }}, Py${{ matrix.python-version }})
@@ -207,7 +207,7 @@ try:\n importlib.import_module('PySide6')\nexcept Exception:\n subprocess.check_
           pip install bandit[toml]
           bandit -r src/
       
-      - name: Dependency security check with safety (macOS)
+      - name: Dependency security check with pip-audit (macOS)
         run: |
-          pip install safety
-          safety check
+          pip install pip-audit
+          pip-audit -r requirements.txt -r requirements-dev.txt
