@@ -1,100 +1,170 @@
-# Oracle Lottery Predictor
-[English](README.md) | [Ξ•Ξ»Ξ»Ξ·Ξ½ΞΉΞΊΞ¬](README.el.md)
+<div align="center">
+
+# πŸ"Š Oracle Lottery Predictor
+
+### Professional Lottery Analysis & Prediction Platform
 
 [![CI](https://img.shields.io/badge/CI-passing-brightgreen)](#)
-[![Windows_Installer](https://img.shields.io/badge/Windows-Installer-blue)](#)
+[![Windows Installer](https://img.shields.io/badge/Windows-Installer-blue)](#)
 [![Python](https://img.shields.io/badge/Python-3.10+-blue)](#)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](#)
 
-**Oracle Lottery Predictor** β€” offline-first analysis & column generation for **TZOKER / LOTTO / EuroJackpot**.  
-Blend of **EWMA/BMA**, adaptive **luck/unluck**, **constraints**, **Gumbel Top-k** sampling, **DPP** portfolio selection, **Monte Carlo** risk, and optional **ML** (Prophet, LightGBM, RF, XGBoost, SVM).  
-Now ships as a **native desktop app (PySide6)** β€” no browser, no local server.
+[English](README.md) | [Ξ•Ξ»Ξ»Ξ·Ξ½ΞΉΞΊΞ¬](README.el.md)
 
-> Randomness is the sea; we chart the waves. Play responsibly.
+**Advanced statistical analysis and intelligent prediction system for multiple international lotteries**
 
-## Supported Lotteries
+</div>
 
-### Greek Lotteries
-- **TZOKER** πŸ‡¬πŸ‡· - 5 numbers (1-45) + 1 Joker (1-20)
-- **LOTTO** πŸ‡¬πŸ‡· - 6 numbers (1-49)
+---
 
-### Pan-European
-- **EuroJackpot** πŸ‡ͺπŸ‡Ί - 5 numbers (1-50) + 2 Euro numbers (1-12)
+## πŸ"Œ Overview
 
-### United Kingdom
-- **UK National Lottery** πŸ‡¬πŸ‡§ - 6 numbers (1-59)
+**Oracle Lottery Predictor** is a professional-grade, offline-first lottery analysis platform that combines advanced statistical modeling with machine learning to generate intelligent predictions. Built as a native desktop application, it offers sophisticated analysis tools without requiring an internet connection or browser.
 
-### Spain
-- **La Primitiva** πŸ‡ͺπŸ‡Έ - 6 numbers (1-49) + 1 reintegro (1-10)
+### Key Technologies
+- **Statistical Models**: EWMA, BMA, Adaptive Luck/Unluck Factors
+- **Machine Learning**: Prophet, LightGBM, Random Forest, XGBoost, SVM
+- **Sampling**: Gumbel Top-k with constraint validation
+- **Portfolio Optimization**: DPP (Determinantal Point Process)
+- **Risk Analysis**: Monte Carlo simulation
+- **Platform**: Native desktop app (PySide6/Qt6)
 
-### Italy
-- **SuperEnalotto** πŸ‡?πŸ‡Ή - 6 numbers (1-90)
+> **Disclaimer**: Lottery draws are random events. This tool provides statistical analysis and probabilistic predictions. No system can guarantee wins. Play responsibly.
 
-### France
-- **Loto** πŸ‡«πŸ‡· - 5 numbers (1-49) + 1 Chance (1-10)
+---
 
-### Germany
-- **Lotto 6aus49** πŸ‡©πŸ‡ͺ - 6 numbers (1-49) + 1 Superzahl (1-10)
+## πŸ–₯️ Application Screenshots
 
-### Austria
-- **Austrian Lotto** πŸ‡¦πŸ‡Ή - 6 numbers (1-45)
+### Main Interface
+The intuitive desktop application provides easy access to all lottery games and prediction features.
 
-### Switzerland
-- **Swiss Lotto** πŸ‡¨πŸ‡­ - 6 numbers (1-42) + 1 Lucky number (1-6)
+![Main Window](assets/main_window.png)
 
-**Note**: All supported lotteries offer progressive jackpots. See [LOTTERY_RESULTS_SOURCES.md](LOTTERY_RESULTS_SOURCES.md) for official results URLs and detailed information about each lottery.
+### Advanced Settings & Configuration
+Customize prediction algorithms, constraints, and analysis parameters to suit your preferences.
 
-## Features
-- Offline by default; optional online fetch
-- **βœ¨ NEW: AI/IA Learning System** - Adaptive machine learning that improves predictions over time (see [AI_SYSTEM_STATUS.md](AI_SYSTEM_STATUS.md))
-- **βœ¨ NEW: Automated Live Feed** - Fetch and store latest draw results automatically (see [DATA_FETCHER_README.md](DATA_FETCHER_README.md))
-- **βœ¨ NEW: Automated Scheduling** - Schedule periodic data fetching with configurable intervals (see [SCHEDULER_README.md](SCHEDULER_README.md))
-- **βœ¨ NEW: Prediction Tracking** - Save predictions, compare with results, track accuracy over time (see [PREDICTION_TRACKER_README.md](PREDICTION_TRACKER_README.md))
-- Auto-merge histories from `data/history/<game>/` (CSV/XLS/XLSX)
-- Diagnostics: frequency, recency, last-digits, pairs heatmap, odd/even
-- Modeling: EWMA, BMA, adaptive luck/unluck, optional ML
-- Constraints: sums, odd/even, lows, consecutive, last-digit caps (adaptive/manual)
-- Sampler: Gumbel Top-k (+ optional wheels)
-- Portfolio: DPP/Greedy + coverage boost; **Monte Carlo** risk
-- Optional **EV re-rank** (cost-aware)
-- Exports CSV/PNG to `exports/<game>/`
-- **Plot caching** & **debounced** heavy sliders
-- Windows **Installer** (icon, shortcuts, **Uninstall**)
-- CI/CD: GitHub Actions (portable EXE + Installer)
-- **βœ¨ NEW: Docker Support** - Containerized deployment with Docker and Docker Compose (see [DOCKER_CMAKE_README.md](DOCKER_CMAKE_README.md))
-- **βœ¨ NEW: CMake Build System** - Cross-platform build support with CMake (see [DOCKER_CMAKE_README.md](DOCKER_CMAKE_README.md))
+![Settings Window](assets/settings_window.png)
 
-## Quick Start
-### Windows (Installer)
-1. Download `OracleLotteryPredictorInstaller_X.Y.Z.exe` from **Releases**.
-2. Run installer β†’ Start Menu/Desktop shortcuts are created; app data folders (`data/history/*`, `exports/*`) are set up.
-3. Launch **Oracle Lottery Predictor (Desktop)** from Start Menu or Desktop. (No browser needed.)
+### Comprehensive Analysis Dashboard
+View historical data, frequency distributions, number pair analysis, and recent draw results.
 
-### Portable
-- Download `ultra_lottery_helper.exe`, optionally place a `data/` folder next to it, then double-click to run.
+![Analysis Results](assets/analysis_results.png)
 
-### Dev (Python)
-For detailed development setup instructions, see [SETUP.md](SETUP.md).
+---
 
-Quick start:
+## 🌍 Supported Lotteries
+
+### πŸ‡¬πŸ‡· Greece
+- **TZOKER** - 5 numbers (1-45) + 1 Joker (1-20)
+- **LOTTO** - 6 numbers (1-49)
+
+### πŸ‡ͺπŸ‡Ί Pan-European
+- **EuroJackpot** - 5 numbers (1-50) + 2 Euro numbers (1-12)
+
+### πŸ‡¬πŸ‡§ United Kingdom
+- **UK National Lottery** - 6 numbers (1-59)
+
+### πŸ‡ͺπŸ‡Έ Spain
+- **La Primitiva** - 6 numbers (1-49) + 1 reintegro (1-10)
+
+### πŸ‡?πŸ‡Ή Italy
+- **SuperEnalotto** - 6 numbers (1-90)
+
+### πŸ‡«πŸ‡· France
+- **Loto** - 5 numbers (1-49) + 1 Chance (1-10)
+
+### πŸ‡©πŸ‡ͺ Germany
+- **Lotto 6aus49** - 6 numbers (1-49) + 1 Superzahl (1-10)
+
+### πŸ‡¦πŸ‡Ή Austria
+- **Austrian Lotto** - 6 numbers (1-45)
+
+### πŸ‡¨πŸ‡­ Switzerland
+- **Swiss Lotto** - 6 numbers (1-42) + 1 Lucky number (1-6)
+
+**Note**: All supported lotteries offer progressive jackpots. See [LOTTERY_RESULTS_SOURCES.md](LOTTERY_RESULTS_SOURCES.md) for official results URLs and detailed information.
+
+---
+
+## ✨ Features
+
+### Core Analysis
+- **Offline-First Design** - Works without internet connection
+- **Automated Data Management** - Auto-merge historical data from CSV/XLS/XLSX files
+- **Advanced Diagnostics** - Frequency analysis, recency tracking, last-digit patterns, pair heatmaps, odd/even distribution
+
+### Prediction Engine
+- **Statistical Modeling** - EWMA, BMA, adaptive luck/unluck factors
+- **Machine Learning** - Optional ML ensemble (Prophet, LightGBM, XGBoost, Random Forest, SVM)
+- **Smart Constraints** - Customizable sum ranges, odd/even balance, consecutive number limits
+- **Advanced Sampling** - Gumbel Top-k sampler with optional wheel systems
+- **Portfolio Optimization** - DPP/Greedy selection with coverage boost
+- **Risk Assessment** - Monte Carlo simulation
+- **EV Re-ranking** - Cost-aware expected value optimization
+
+### Automation & Tracking
+- **βœ¨ AI Learning System** - Adaptive machine learning that improves predictions over time ([AI_SYSTEM_STATUS.md](AI_SYSTEM_STATUS.md))
+- **βœ¨ Live Data Feeds** - Automated fetching and storage of latest draw results ([DATA_FETCHER_README.md](DATA_FETCHER_README.md))
+- **βœ¨ Intelligent Scheduling** - Configurable periodic data fetching ([SCHEDULER_README.md](SCHEDULER_README.md))
+- **βœ¨ Prediction Tracking** - Save predictions, compare with results, track accuracy over time ([PREDICTION_TRACKER_README.md](PREDICTION_TRACKER_README.md))
+
+### Performance & Deployment
+- **Plot Caching** - Optimized visualization rendering
+- **Debounced Controls** - Smooth slider interaction
+- **Windows Installer** - Professional installation with shortcuts and uninstaller
+- **CI/CD Pipeline** - Automated builds via GitHub Actions
+- **Docker Support** - Containerized deployment ([DOCKER_CMAKE_README.md](DOCKER_CMAKE_README.md))
+- **CMake Build System** - Cross-platform build support ([DOCKER_CMAKE_README.md](DOCKER_CMAKE_README.md))
+
+### Export & Reporting
+- **Multiple Formats** - Export predictions to CSV and PNG
+- **Organized Output** - Game-specific export directories
+
+---
+
+## πŸš€ Quick Start
+
+### Windows (Recommended)
+
+#### Option 1: Installer
+1. Download `OracleLotteryPredictorInstaller_X.Y.Z.exe` from [Releases](https://github.com/Tsoympet/ultra-lottery-helper/releases)
+2. Run the installer - it will create Start Menu and Desktop shortcuts
+3. Launch **Oracle Lottery Predictor** from the Start Menu or Desktop
+4. No browser or additional setup required!
+
+#### Option 2: Portable Executable
+1. Download `ultra_lottery_helper.exe` from [Releases](https://github.com/Tsoympet/ultra-lottery-helper/releases)
+2. Optionally place a `data/` folder next to it for historical data
+3. Double-click to run
+
+### Developer Setup
+
+For detailed development instructions, see [SETUP.md](SETUP.md).
+
+**Quick Start:**
 ```bash
+# Create virtual environment
 python -m venv .venv
-# Windows
+
+# Activate (Windows)
 .venv\Scripts\activate
-# Linux/Mac
+
+# Activate (Linux/Mac)
 source .venv/bin/activate
 
+# Install dependencies
 pip install --upgrade pip
 pip install -e .
 
-# Run the application
+# Run application
 oracle-lottery
 # Or
 python src/ulh_desktop.py
 ```
 
 ### Docker Deployment
-Run the application in a container:
+
+Run the application in a containerized environment:
 
 ```bash
 # Build and run with Docker
@@ -108,7 +178,14 @@ docker-compose up oracle-lottery
 # For detailed Docker and CMake instructions, see DOCKER_CMAKE_README.md
 ```
 
-### Automated Data Fetching (New!)
+---
+
+## πŸ€– Advanced Features
+
+### Automated Data Fetching
+
+Keep your lottery data up-to-date automatically:
+
 ```bash
 # Fetch latest draw results for all lotteries
 python src/lottery_data_fetcher.py --all
@@ -118,12 +195,14 @@ python src/lottery_data_fetcher.py --game EUROJACKPOT
 
 # Check fetch status
 python src/lottery_data_fetcher.py --status
-
-# See full documentation
-cat DATA_FETCHER_README.md
 ```
 
-### Automated Scheduling (New!)
+For complete documentation, see [DATA_FETCHER_README.md](DATA_FETCHER_README.md).
+
+### Automated Scheduling
+
+Set up periodic data fetching:
+
 ```bash
 # Enable automated fetching for all lotteries (every 12 hours)
 python src/lottery_scheduler.py --enable-all
@@ -133,12 +212,14 @@ python src/lottery_scheduler.py --start
 
 # Check scheduler status
 python src/lottery_scheduler.py --status
-
-# See full documentation
-cat SCHEDULER_README.md
 ```
 
-### Prediction Tracking (New!)
+For complete documentation, see [SCHEDULER_README.md](SCHEDULER_README.md).
+
+### Prediction Tracking
+
+Save and track your predictions:
+
 ```bash
 # Save a prediction for upcoming draw
 python src/prediction_tracker.py --save EUROJACKPOT \
@@ -158,12 +239,14 @@ python src/prediction_tracker.py --stats
 
 # View pending predictions
 python src/prediction_tracker.py --pending
-
-# See full documentation
-cat PREDICTION_TRACKER_README.md
 ```
 
-### AI/IA Learning System (New!)
+For complete documentation, see [PREDICTION_TRACKER_README.md](PREDICTION_TRACKER_README.md).
+
+### AI Learning System
+
+The adaptive learning system improves over time:
+
 ```bash
 # Record predictions for learning
 python src/ulh_learn_cli.py record-portfolio TZOKER "1 5 12 27 38" "3 14 22 33 41"
@@ -173,52 +256,140 @@ python src/ulh_learn_cli.py record-outcome TZOKER --main "3 14 22 33 41" --sec "
 
 # Trigger learning and parameter optimization
 python src/ulh_learn_cli.py learn TZOKER --k 100 --replay 2
-
-# The AI system automatically adapts:
-# - Ensemble weights (EWMA, recency, ML)
-# - Luck/unluck factors
-# - Memory half-life
-# Based on actual prediction performance!
-
-# See full documentation
-cat AI_SYSTEM_STATUS.md
 ```
 
-## Data Layout
+The AI system automatically adapts:
+- Ensemble weights (EWMA, recency, ML)
+- Luck/unluck factors
+- Memory half-life
+- Based on actual prediction performance
+
+For complete documentation, see [AI_SYSTEM_STATUS.md](AI_SYSTEM_STATUS.md).
+
+---
+
+## πŸ"‚ Data Structure
+
 ```
-data/history/{tzoker,lotto,eurojackpot,
-              uk_national_lottery,la_primitiva,superenalotto,loto_france,lotto_6aus49,austrian_lotto,swiss_lotto,
-              us_powerball,us_mega_millions,australia_powerball,canada_lotto_649,japan_loto_6,south_africa_powerball}
-exports/{tzoker,lotto,eurojackpot,
-         uk_national_lottery,la_primitiva,superenalotto,loto_france,lotto_6aus49,austrian_lotto,swiss_lotto,
-         us_powerball,us_mega_millions,australia_powerball,canada_lotto_649,japan_loto_6,south_africa_powerball}
+data/
+└── history/
+    β"œβ"€β"€ tzoker/
+    β"œβ"€β"€ lotto/
+    β"œβ"€β"€ eurojackpot/
+    β"œβ"€β"€ uk_national_lottery/
+    β"œβ"€β"€ la_primitiva/
+    β"œβ"€β"€ superenalotto/
+    β"œβ"€β"€ loto_france/
+    β"œβ"€β"€ lotto_6aus49/
+    β"œβ"€β"€ austrian_lotto/
+    └── swiss_lotto/
+
+exports/
+└── [same structure as data/history/]
+
 assets/
-  β"œβ"€β"€ flags/          # Country flags for each lottery
-  β"œβ"€β"€ lottery_icons/  # Official lottery icons
-  └── icon.ico        # Main app icon
+β"œβ"€β"€ flags/              # Country flags for each lottery
+β"œβ"€β"€ lottery_icons/      # Official lottery icons
+β"œβ"€β"€ icon.ico            # Main application icon
+β"œβ"€β"€ banner.bmp          # Installer banner
+└── splash.png          # Splash screen
 ```
 
-## Local Build (Windows)
-Run:
-```
+---
+
+## πŸ"§ Building from Source
+
+### Windows
+
+Run the build script:
+```bash
 build_installer.bat
 ```
-Produces:
-- `dist\ultra_lottery_helper.exe` (portable)
-- `dist_installer\OracleLotteryPredictorInstaller_*.exe`
 
-## CI/CD
-- `.github/workflows/ci.yml` β€” CI on Linux: installs deps, headless-safe imports (Qt offscreen), optional pytest
-- `.github/workflows/build-windows-installer.yml` β€” Windows build:
-  - PyInstaller (**desktop entry:** `src/ulh_desktop.py`, bundles `assets`)
-  - Inno Setup via Chocolatey
-  - Stamps version from release tag (`vX.Y.Z`)
-  - Builds installer, computes **SHA256**, uploads artifacts, auto-attaches to Release
+This produces:
+- `dist\ultra_lottery_helper.exe` (portable executable)
+- `dist_installer\OracleLotteryPredictorInstaller_*.exe` (installer)
 
-## Requirements
-- Windows 10/11 for the packaged EXE/installer
-- Python 3.10+ (for dev runs)
-- Optional ML libraries (enabled automatically if installed): scikit-learn, lightgbm, xgboost, prophet
+### CI/CD Pipeline
 
-## License
-MIT (see `LICENSE.txt`). Use responsibly; no guarantees.
+The project includes automated build pipelines:
+
+- **`.github/workflows/ci.yml`** - Cross-platform CI testing
+  - Tests on Ubuntu, Windows, and macOS
+  - Multiple Python versions (3.9, 3.10, 3.11, 3.12)
+  - Headless Qt support for automated testing
+
+- **`.github/workflows/build-windows-installer.yml`** - Windows builds
+  - PyInstaller bundling with `src/ulh_desktop.py` entry point
+  - Inno Setup installer creation
+  - Automatic version stamping from release tags
+  - SHA256 checksum generation
+  - Automated artifact upload to releases
+
+---
+
+## πŸ"‹ Requirements
+
+### For End Users
+- Windows 10/11 (for packaged EXE/installer)
+- No additional software required
+
+### For Developers
+- Python 3.10 or higher
+- Optional ML libraries (auto-enabled if installed):
+  - scikit-learn
+  - lightgbm
+  - xgboost
+  - prophet
+
+---
+
+## πŸ"š Documentation
+
+- [SETUP.md](SETUP.md) - Detailed development setup instructions
+- [CHANGELOG.md](CHANGELOG.md) - Version history and changes
+- [DATA_FETCHER_README.md](DATA_FETCHER_README.md) - Automated data fetching guide
+- [SCHEDULER_README.md](SCHEDULER_README.md) - Scheduling system documentation
+- [PREDICTION_TRACKER_README.md](PREDICTION_TRACKER_README.md) - Prediction tracking guide
+- [AI_SYSTEM_STATUS.md](AI_SYSTEM_STATUS.md) - AI learning system documentation
+- [DOCKER_CMAKE_README.md](DOCKER_CMAKE_README.md) - Docker and CMake build instructions
+- [LOTTERY_RESULTS_SOURCES.md](LOTTERY_RESULTS_SOURCES.md) - Official lottery results sources
+- [README_CI.md](README_CI.md) - CI/CD pipeline documentation
+- [README_SIGNING.md](README_SIGNING.md) - Code signing information
+- [RELEASE-CHECKLIST.md](RELEASE-CHECKLIST.md) - Release process checklist
+
+---
+
+## πŸ" License
+
+This project is licensed under the MIT License - see [LICENSE.txt](LICENSE.txt) for details.
+
+**Use responsibly. This software is provided "as is" without warranty of any kind. Gambling involves risk. Never spend more than you can afford to lose.**
+
+---
+
+## 🀝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+---
+
+## ⚠️ Responsible Gaming
+
+This tool is designed for entertainment and educational purposes. Please remember:
+
+- Lottery outcomes are random and unpredictable
+- Past results do not influence future draws
+- No prediction system can guarantee wins
+- Only play with money you can afford to lose
+- Seek help if gambling becomes a problem
+
+---
+
+<div align="center">
+
+**Made with πŸ"Š by the Oracle Lottery Predictor Team**
+
+[Report Bug](https://github.com/Tsoympet/ultra-lottery-helper/issues) Β· [Request Feature](https://github.com/Tsoympet/ultra-lottery-helper/issues)
+
+</div>
