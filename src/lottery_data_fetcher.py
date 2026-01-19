@@ -95,6 +95,8 @@ class LotteryDataFetcher:
             NotificationManager(self.data_root) if NotificationManager else None
         )
         self._http_post = getattr(requests, "post", None)
+        self._load_json = load_json if 'load_json' in globals() else None
+        self._save_json = save_json if 'save_json' in globals() else None
     
     def _load_fetch_log(self) -> Dict:
         """Load the fetch log tracking when each lottery was last updated."""
@@ -160,10 +162,12 @@ class LotteryDataFetcher:
                 "ts": time.time(),
             }
             try:
-                existing = load_json(log_path, default=[], logger=logger) if 'load_json' in globals() else []
+                loader = getattr(self, "_load_json", None)
+                saver = getattr(self, "_save_json", None)
+                existing = loader(log_path, default=[], logger=logger) if loader else []
                 existing.append(entry)
-                if 'save_json' in globals():
-                    save_json(log_path, existing, atomic=True, logger=logger)
+                if saver:
+                    saver(log_path, existing, atomic=True, logger=logger)
                 else:
                     log_path.parent.mkdir(parents=True, exist_ok=True)
                     log_path.write_text(json.dumps(existing), encoding="utf-8")
@@ -200,9 +204,6 @@ class LotteryDataFetcher:
         
         Returns:
             (success, message) tuple
-            
-        Raises:
-            ValueError: If game is unknown
         """
         if game not in GAMES:
             msg = f"Unknown lottery: {game}"

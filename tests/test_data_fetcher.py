@@ -129,7 +129,7 @@ class TestLotteryDataFetcher:
             def json(self):
                 return self._data
 
-        monkeypatch.setattr(fetch_online_history.__globals__["requests"], "get", lambda *a, **k: DummyResponse(payload))
+        monkeypatch.setattr("ultra_lottery_helper.requests.get", lambda *a, **k: DummyResponse(payload))
         LOTTERY_METADATA["TZOKER"]["api_endpoint"] = "https://api.example.com/tzoker"
         df, msg = fetch_online_history("TZOKER")
         assert not df.empty
