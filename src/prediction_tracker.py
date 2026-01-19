@@ -21,7 +21,7 @@ if os.path.dirname(__file__) not in sys.path:
 
 try:
     from src.ultra_lottery_helper import GAMES, LOTTERY_METADATA, _load_all_history
-    from src.utils import get_logger, load_json, save_json
+    from src.utils import get_logger, load_json, save_json, validate_range
     CORE_AVAILABLE = True
 except ImportError as e:
     CORE_AVAILABLE = False
@@ -59,6 +59,9 @@ except ImportError as e:
         else:
             with open(path, 'w', encoding='utf-8') as f:
                 json.dump(data, f, indent=2)
+    def validate_range(value, min_val, max_val, name="value"):
+        if not min_val <= value <= max_val:
+            raise ValueError(f"{name} must be between {min_val} and {max_val}, got {value}")
 
 logger = get_logger('prediction_tracker')
 
@@ -98,6 +101,41 @@ class PredictionTracker:
         """Save prediction results to file with atomic write."""
         save_json(self.results_file, self.results, atomic=True, logger=logger)
     
+    def _validate_prediction_numbers(self, game: str, predicted_numbers: List[int]) -> List[int]:
+        """
+        Validate predicted numbers against official lottery rules.
+        Ensures counts, ranges, and uniqueness per pool.
+        """
+        spec = GAMES[game]
+        expected_total = spec.main_pick + spec.sec_pick
+
+        try:
+            numbers = [int(n) for n in predicted_numbers]
+        except (TypeError, ValueError):
+            raise ValueError("Predicted numbers must be integers")
+
+        if len(numbers) != expected_total:
+            raise ValueError(f"Expected {expected_total} numbers, got {len(numbers)}")
+
+        main_numbers = numbers[:spec.main_pick]
+        sec_numbers = numbers[spec.main_pick:] if spec.sec_pick else []
+
+        if len(set(main_numbers)) != spec.main_pick:
+            raise ValueError(f"Main numbers must be unique for {game}")
+        for n in main_numbers:
+            validate_range(n, 1, spec.main_max, "Main number")
+
+        if spec.sec_pick:
+            if len(set(sec_numbers)) != len(sec_numbers):
+                raise ValueError(f"Secondary numbers must be unique for {game}")
+            for n in sec_numbers:
+                validate_range(n, 1, spec.sec_max, "Secondary number")
+            # Lotteries with shared pools (e.g., same max) cannot repeat numbers across pools
+            if spec.sec_max == spec.main_max and set(sec_numbers).intersection(main_numbers):
+                raise ValueError(f"Secondary numbers must differ from main numbers for {game}")
+
+        return numbers
+
     def save_prediction(self, game: str, draw_date: str, 
                        predicted_numbers: List[int], 
                        metadata: Dict = None) -> str:
@@ -120,16 +158,14 @@ class PredictionTracker:
         pred_id = f"{game}_{draw_date}_{datetime.now().strftime('%Y%m%d%H%M%S')}"
         
         # Validate numbers
-        spec = GAMES[game]
-        if len(predicted_numbers) != (spec.main_pick + spec.sec_pick):
-            raise ValueError(f"Expected {spec.main_pick + spec.sec_pick} numbers, got {len(predicted_numbers)}")
+        validated_numbers = self._validate_prediction_numbers(game, predicted_numbers)
         
         # Create prediction entry
         prediction = {
             "id": pred_id,
             "game": game,
             "draw_date": draw_date,
-            "predicted_numbers": predicted_numbers,
+            "predicted_numbers": validated_numbers,
             "created_at": datetime.now().isoformat(),
             "metadata": metadata or {},
             "status": "pending"  # pending, matched, unmatched

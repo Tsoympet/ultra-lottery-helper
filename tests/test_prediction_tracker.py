@@ -85,6 +85,32 @@ class TestPredictionTracker:
                 draw_date='2026-01-25',
                 predicted_numbers=[1, 2, 3]
             )
+
+    def test_save_prediction_enforces_ranges_and_uniqueness(self):
+        """Test official rule validation for predictions."""
+        # EuroJackpot: secondary numbers must be within 1-12 and unique
+        with pytest.raises(ValueError, match="Secondary numbers must be unique"):
+            self.tracker.save_prediction(
+                game='EUROJACKPOT',
+                draw_date='2026-01-25',
+                predicted_numbers=[1, 2, 3, 4, 5, 6, 6]
+            )
+
+        # Main numbers must be within range
+        with pytest.raises(ValueError, match="Main number must be between"):
+            self.tracker.save_prediction(
+                game='LOTTO',
+                draw_date='2026-01-25',
+                predicted_numbers=[0, 2, 3, 4, 5, 6]
+            )
+
+        # Shared pool bonuses cannot repeat main numbers (Japan Loto 6)
+        with pytest.raises(ValueError, match="Secondary numbers must differ"):
+            self.tracker.save_prediction(
+                game='JAPAN_LOTO_6',
+                draw_date='2026-01-25',
+                predicted_numbers=[1, 2, 3, 4, 5, 6, 6]
+            )
     
     def test_compare_with_draw(self):
         """Test comparing prediction with actual draw."""
