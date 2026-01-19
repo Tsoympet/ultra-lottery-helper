@@ -5,8 +5,8 @@ Lottery Prediction Tracker - Prediction Comparison and Validation System
 Tracks predictions, compares with actual results, and provides accuracy metrics.
 """
 
-import logging
 import argparse
+import logging
 import os
 import sys
 from datetime import datetime, timedelta
@@ -532,10 +532,9 @@ def _handle_pending(args: argparse.Namespace, tracker: PredictionTracker) -> Non
         print(pending_df.to_string(index=False))
 
 
-def _execute_cli(args: argparse.Namespace) -> None:
+def _execute_cli(args: argparse.Namespace, parser: Optional[argparse.ArgumentParser] = None) -> None:
     """Execute CLI commands for prediction tracker."""
     tracker = PredictionTracker()
-    parser = getattr(args, "parser", None)
     if args.save:
         _handle_save(args, tracker)
     elif args.compare:
@@ -575,9 +574,7 @@ def main():
     parser.add_argument('--days', type=int, default=30,
                        help='Days to look back for stats (default: 30)')
     args = parser.parse_args()
-    # Attach parser so _execute_cli can reuse help output without globals
-    args.parser = parser  # type: ignore[attr-defined]
-    _execute_cli(args)
+    _execute_cli(args, parser)
 
 
 if __name__ == "__main__":
