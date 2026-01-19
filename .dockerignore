@@ -67,6 +67,6 @@ build_installer.bat
 
 # Examples and documentation
 examples/
-CHANGELOG.md
-SETUP.md
-RELEASE-CHECKLIST.md
+docs/CHANGELOG.md
+docs/SETUP.md
+docs/RELEASE-CHECKLIST.md
