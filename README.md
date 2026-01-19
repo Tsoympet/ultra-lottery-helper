@@ -12,8 +12,43 @@ Now ships as a **native desktop app (PySide6)** β€” no browser, no local se
 
 > Randomness is the sea; we chart the waves. Play responsibly.
 
+## Supported Lotteries
+
+### Greek Lotteries
+- **TZOKER** πŸ‡¬πŸ‡· - 5 numbers (1-45) + 1 Joker (1-20)
+- **LOTTO** πŸ‡¬πŸ‡· - 6 numbers (1-49)
+
+### Pan-European
+- **EuroJackpot** πŸ‡ͺπŸ‡Ί - 5 numbers (1-50) + 2 Euro numbers (1-12)
+
+### United Kingdom
+- **UK National Lottery** πŸ‡¬πŸ‡§ - 6 numbers (1-59)
+
+### Spain
+- **La Primitiva** πŸ‡ͺπŸ‡Έ - 6 numbers (1-49) + 1 reintegro (1-10)
+
+### Italy
+- **SuperEnalotto** πŸ‡?πŸ‡Ή - 6 numbers (1-90)
+
+### France
+- **Loto** πŸ‡«πŸ‡· - 5 numbers (1-49) + 1 Chance (1-10)
+
+### Germany
+- **Lotto 6aus49** πŸ‡©πŸ‡ͺ - 6 numbers (1-49) + 1 Superzahl (1-10)
+
+### Austria
+- **Austrian Lotto** πŸ‡¦πŸ‡Ή - 6 numbers (1-45)
+
+### Switzerland
+- **Swiss Lotto** πŸ‡¨πŸ‡­ - 6 numbers (1-42) + 1 Lucky number (1-6)
+
+**Note**: All supported lotteries offer progressive jackpots. See [LOTTERY_RESULTS_SOURCES.md](LOTTERY_RESULTS_SOURCES.md) for official results URLs and detailed information about each lottery.
+
 ## Features
 - Offline by default; optional online fetch
+- **βœ¨ NEW: Automated Live Feed** - Fetch and store latest draw results automatically (see [DATA_FETCHER_README.md](DATA_FETCHER_README.md))
+- **βœ¨ NEW: Automated Scheduling** - Schedule periodic data fetching with configurable intervals (see [SCHEDULER_README.md](SCHEDULER_README.md))
+- **βœ¨ NEW: Prediction Tracking** - Save predictions, compare with results, track accuracy over time (see [PREDICTION_TRACKER_README.md](PREDICTION_TRACKER_README.md))
 - Auto-merge histories from `data/history/<game>/` (CSV/XLS/XLSX)
 - Diagnostics: frequency, recency, last-digits, pairs heatmap, odd/even
 - Modeling: EWMA, BMA, adaptive luck/unluck, optional ML
@@ -47,11 +82,73 @@ pip install -r requirements.txt
 python src/ulh_desktop.py
 ```
 
+### Automated Data Fetching (New!)
+```bash
+# Fetch latest draw results for all lotteries
+python src/lottery_data_fetcher.py --all
+
+# Fetch specific lottery
+python src/lottery_data_fetcher.py --game EUROJACKPOT
+
+# Check fetch status
+python src/lottery_data_fetcher.py --status
+
+# See full documentation
+cat DATA_FETCHER_README.md
+```
+
+### Automated Scheduling (New!)
+```bash
+# Enable automated fetching for all lotteries (every 12 hours)
+python src/lottery_scheduler.py --enable-all
+
+# Start the scheduler (runs continuously)
+python src/lottery_scheduler.py --start
+
+# Check scheduler status
+python src/lottery_scheduler.py --status
+
+# See full documentation
+cat SCHEDULER_README.md
+```
+
+### Prediction Tracking (New!)
+```bash
+# Save a prediction for upcoming draw
+python src/prediction_tracker.py --save EUROJACKPOT \
+    --numbers "5,12,18,27,33,2,8" \
+    --draw-date "2026-01-25"
+
+# Compare predictions with actual results
+python src/prediction_tracker.py --compare EUROJACKPOT \
+    --draw-date "2026-01-25" \
+    --actual "5,12,19,27,33,2,9"
+
+# Auto-compare all pending predictions
+python src/prediction_tracker.py --auto-compare
+
+# View accuracy statistics
+python src/prediction_tracker.py --stats
+
+# View pending predictions
+python src/prediction_tracker.py --pending
+
+# See full documentation
+cat PREDICTION_TRACKER_README.md
+```
+
 ## Data Layout
 ```
-data/history/{tzoker,lotto,eurojackpot}
-exports/{tzoker,lotto,eurojackpot}
-assets/icon.ico
+data/history/{tzoker,lotto,eurojackpot,
+              uk_national_lottery,la_primitiva,superenalotto,loto_france,lotto_6aus49,austrian_lotto,swiss_lotto,
+              us_powerball,us_mega_millions,australia_powerball,canada_lotto_649,japan_loto_6,south_africa_powerball}
+exports/{tzoker,lotto,eurojackpot,
+         uk_national_lottery,la_primitiva,superenalotto,loto_france,lotto_6aus49,austrian_lotto,swiss_lotto,
+         us_powerball,us_mega_millions,australia_powerball,canada_lotto_649,japan_loto_6,south_africa_powerball}
+assets/
+  β"œβ"€β"€ flags/          # Country flags for each lottery
+  β"œβ"€β"€ lottery_icons/  # Official lottery icons
+  └── icon.ico        # Main app icon
 ```
 
 ## Local Build (Windows)

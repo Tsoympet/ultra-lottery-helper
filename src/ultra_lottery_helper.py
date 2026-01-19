@@ -140,12 +140,207 @@ GAMES: Dict[str, GameSpec] = {
     "TZOKER": GameSpec("TZOKER", 5, 45, 1, 20, ["n1","n2","n3","n4","n5","joker"]),
     "LOTTO":  GameSpec("LOTTO",  6, 49, 0,  0, ["n1","n2","n3","n4","n5","n6"]),
     "EUROJACKPOT": GameSpec("EUROJACKPOT", 5, 50, 2, 12, ["n1","n2","n3","n4","n5","e1","e2"]),
+    # European Lotteries
+    "UK_NATIONAL_LOTTERY": GameSpec("UK_NATIONAL_LOTTERY", 6, 59, 0, 0, ["n1","n2","n3","n4","n5","n6"]),
+    "LA_PRIMITIVA": GameSpec("LA_PRIMITIVA", 6, 49, 1, 10, ["n1","n2","n3","n4","n5","n6","bonus"]),
+    "SUPERENALOTTO": GameSpec("SUPERENALOTTO", 6, 90, 0, 0, ["n1","n2","n3","n4","n5","n6"]),
+    "LOTO_FRANCE": GameSpec("LOTO_FRANCE", 5, 49, 1, 10, ["n1","n2","n3","n4","n5","chance"]),
+    "LOTTO_6AUS49": GameSpec("LOTTO_6AUS49", 6, 49, 1, 10, ["n1","n2","n3","n4","n5","n6","super"]),
+    "AUSTRIAN_LOTTO": GameSpec("AUSTRIAN_LOTTO", 6, 45, 0, 0, ["n1","n2","n3","n4","n5","n6"]),
+    "SWISS_LOTTO": GameSpec("SWISS_LOTTO", 6, 42, 1, 6, ["n1","n2","n3","n4","n5","n6","lucky"]),
+    # Non-European Lotteries
+    "US_POWERBALL": GameSpec("US_POWERBALL", 5, 69, 1, 26, ["n1","n2","n3","n4","n5","powerball"]),
+    "US_MEGA_MILLIONS": GameSpec("US_MEGA_MILLIONS", 5, 70, 1, 25, ["n1","n2","n3","n4","n5","megaball"]),
+    "AUSTRALIA_POWERBALL": GameSpec("AUSTRALIA_POWERBALL", 7, 35, 1, 20, ["n1","n2","n3","n4","n5","n6","n7","powerball"]),
+    "CANADA_LOTTO_649": GameSpec("CANADA_LOTTO_649", 6, 49, 1, 10, ["n1","n2","n3","n4","n5","n6","bonus"]),
+    "JAPAN_LOTO_6": GameSpec("JAPAN_LOTO_6", 6, 43, 1, 43, ["n1","n2","n3","n4","n5","n6","bonus"]),
+    "SOUTH_AFRICA_POWERBALL": GameSpec("SOUTH_AFRICA_POWERBALL", 5, 50, 1, 20, ["n1","n2","n3","n4","n5","powerball"]),
 }
 
 OPAP_TICKET_PRICE_DEFAULTS = {
     "TZOKER":      0.50,
     "LOTTO":       0.50,
     "EUROJACKPOT": 2.00,
+    # European Lotteries (approximate prices in EUR)
+    "UK_NATIONAL_LOTTERY": 2.00,  # Β£2.00
+    "LA_PRIMITIVA": 1.00,
+    "SUPERENALOTTO": 1.00,
+    "LOTO_FRANCE": 2.20,
+    "LOTTO_6AUS49": 1.20,
+    "AUSTRIAN_LOTTO": 1.20,
+    "SWISS_LOTTO": 2.50,  # CHF 2.50
+    # Non-European Lotteries (approximate prices in USD/local currency)
+    "US_POWERBALL": 2.00,  # $2.00
+    "US_MEGA_MILLIONS": 2.00,  # $2.00
+    "AUSTRALIA_POWERBALL": 1.50,  # AUD $1.50
+    "CANADA_LOTTO_649": 3.00,  # CAD $3.00
+    "JAPAN_LOTO_6": 2.00,  # Β₯200
+    "SOUTH_AFRICA_POWERBALL": 0.50,  # R 5.00 (~$0.50 equivalent)
+}
+
+# Lottery metadata: country, flag, icon, description, results source, jackpot info
+LOTTERY_METADATA = {
+    "TZOKER": {
+        "country": "Greece",
+        "flag": "greece.png",
+        "icon": "tzoker.png",
+        "display_name": "TZOKER",
+        "description": "Greek lottery - 5 main numbers (1-45) + 1 Joker (1-20)",
+        "official_url": "https://www.opap.gr/en/web/opap-gr/tzoker",
+        "results_url": "https://www.opap.gr/en/web/opap-gr/tzoker-draw-results",
+        "has_jackpot": True,
+    },
+    "LOTTO": {
+        "country": "Greece",
+        "flag": "greece.png",
+        "icon": "lotto_greece.png",
+        "display_name": "Greek LOTTO",
+        "description": "Greek lottery - 6 numbers (1-49)",
+        "official_url": "https://www.opap.gr/en/web/opap-gr/lotto",
+        "results_url": "https://www.opap.gr/en/web/opap-gr/lotto-draw-results",
+        "has_jackpot": True,
+    },
+    "EUROJACKPOT": {
+        "country": "European Union",
+        "flag": "european_union.png",
+        "icon": "eurojackpot.png",
+        "display_name": "EuroJackpot",
+        "description": "Pan-European lottery - 5 main numbers (1-50) + 2 Euro numbers (1-12)",
+        "official_url": "https://www.eurojackpot.org",
+        "results_url": "https://www.eurojackpot.org/en/results/",
+        "has_jackpot": True,
+    },
+    "UK_NATIONAL_LOTTERY": {
+        "country": "United Kingdom",
+        "flag": "uk.png",
+        "icon": "uk_national_lottery.png",
+        "display_name": "UK National Lottery",
+        "description": "UK Lotto - 6 numbers (1-59)",
+        "official_url": "https://www.national-lottery.co.uk",
+        "results_url": "https://www.national-lottery.co.uk/results/lotto/draw-history",
+        "has_jackpot": True,
+    },
+    "LA_PRIMITIVA": {
+        "country": "Spain",
+        "flag": "spain.png",
+        "icon": "la_primitiva.png",
+        "display_name": "La Primitiva",
+        "description": "Spanish lottery - 6 numbers (1-49) + 1 reintegro (1-10)",
+        "official_url": "https://www.loteriasyapuestas.es/en/la-primitiva",
+        "results_url": "https://www.loteriasyapuestas.es/en/la-primitiva/results",
+        "has_jackpot": True,
+    },
+    "SUPERENALOTTO": {
+        "country": "Italy",
+        "flag": "italy.png",
+        "icon": "superenalotto.png",
+        "display_name": "SuperEnalotto",
+        "description": "Italian lottery - 6 numbers (1-90)",
+        "official_url": "https://www.superenalotto.com",
+        "results_url": "https://www.superenalotto.com/en/results",
+        "has_jackpot": True,
+    },
+    "LOTO_FRANCE": {
+        "country": "France",
+        "flag": "france.png",
+        "icon": "loto_france.png",
+        "display_name": "Loto (France)",
+        "description": "French lottery - 5 numbers (1-49) + 1 Chance (1-10)",
+        "official_url": "https://www.fdj.fr/jeux-de-tirage/loto",
+        "results_url": "https://www.fdj.fr/jeux-de-tirage/loto/resultats",
+        "has_jackpot": True,
+    },
+    "LOTTO_6AUS49": {
+        "country": "Germany",
+        "flag": "germany.png",
+        "icon": "lotto_6aus49.png",
+        "display_name": "Lotto 6aus49",
+        "description": "German lottery - 6 numbers (1-49) + 1 Superzahl (1-10)",
+        "official_url": "https://www.lotto.de/lotto-6aus49",
+        "results_url": "https://www.lotto.de/lotto-6aus49/lottozahlen",
+        "has_jackpot": True,
+    },
+    "AUSTRIAN_LOTTO": {
+        "country": "Austria",
+        "flag": "austria.png",
+        "icon": "austrian_lotto.png",
+        "display_name": "Austrian Lotto",
+        "description": "Austrian lottery - 6 numbers (1-45)",
+        "official_url": "https://www.win2day.at/lottery/lotto",
+        "results_url": "https://www.win2day.at/lottery/lotto/results",
+        "has_jackpot": True,
+    },
+    "SWISS_LOTTO": {
+        "country": "Switzerland",
+        "flag": "switzerland.png",
+        "icon": "swiss_lotto.png",
+        "display_name": "Swiss Lotto",
+        "description": "Swiss lottery - 6 numbers (1-42) + 1 Lucky number (1-6)",
+        "official_url": "https://www.swisslos.ch/en/swisslotto",
+        "results_url": "https://www.swisslos.ch/en/swisslotto/information/winning-numbers.html",
+        "has_jackpot": True,
+    },
+    # Non-European Lotteries
+    "US_POWERBALL": {
+        "country": "United States",
+        "flag": "usa.png",
+        "icon": "us_powerball.png",
+        "display_name": "US Powerball",
+        "description": "USA lottery - 5 numbers (1-69) + 1 Powerball (1-26)",
+        "official_url": "https://www.powerball.com",
+        "results_url": "https://www.powerball.com/previous-results",
+        "has_jackpot": True,
+    },
+    "US_MEGA_MILLIONS": {
+        "country": "United States",
+        "flag": "usa.png",
+        "icon": "us_mega_millions.png",
+        "display_name": "US Mega Millions",
+        "description": "USA lottery - 5 numbers (1-70) + 1 Mega Ball (1-25)",
+        "official_url": "https://www.megamillions.com",
+        "results_url": "https://www.megamillions.com/Winning-Numbers/Previous-Drawings.aspx",
+        "has_jackpot": True,
+    },
+    "AUSTRALIA_POWERBALL": {
+        "country": "Australia",
+        "flag": "australia.png",
+        "icon": "australia_powerball.png",
+        "display_name": "Australia Powerball",
+        "description": "Australian lottery - 7 numbers (1-35) + 1 Powerball (1-20)",
+        "official_url": "https://www.thelott.com/powerball",
+        "results_url": "https://www.thelott.com/powerball/results",
+        "has_jackpot": True,
+    },
+    "CANADA_LOTTO_649": {
+        "country": "Canada",
+        "flag": "canada.png",
+        "icon": "canada_lotto_649.png",
+        "display_name": "Canada Lotto 6/49",
+        "description": "Canadian lottery - 6 numbers (1-49) + 1 Bonus (1-10)",
+        "official_url": "https://www.lotto649.ca",
+        "results_url": "https://www.olg.ca/en/lottery/play-lotto-649/past-results.html",
+        "has_jackpot": True,
+    },
+    "JAPAN_LOTO_6": {
+        "country": "Japan",
+        "flag": "japan.png",
+        "icon": "japan_loto_6.png",
+        "display_name": "Japan Loto 6",
+        "description": "Japanese lottery - 6 numbers (1-43) + 1 Bonus (1-43)",
+        "official_url": "https://www.mizuhobank.co.jp/takarakuji/loto/loto6/",
+        "results_url": "https://www.mizuhobank.co.jp/takarakuji/loto/loto6/",
+        "has_jackpot": True,
+    },
+    "SOUTH_AFRICA_POWERBALL": {
+        "country": "South Africa",
+        "flag": "south_africa.png",
+        "icon": "south_africa_powerball.png",
+        "display_name": "South Africa Powerball",
+        "description": "South African lottery - 5 numbers (1-50) + 1 Powerball (1-20)",
+        "official_url": "https://www.nationallottery.co.za",
+        "results_url": "https://www.nationallottery.co.za/powerball-results",
+        "has_jackpot": True,
+    },
 }
 
 def _game_path(game: str) -> str:
@@ -159,7 +354,15 @@ def fetch_online_history(game: str) -> Tuple[pd.DataFrame, str]:
     urls = {
         "TZOKER": "https://www.opap.gr/en/web/opap-gr/tzoker-draw-results",
         "LOTTO": "https://www.opap.gr/en/web/opap-gr/lotto-draw-results",
-        "EUROJACKPOT": "https://www.eurojackpot.org/en/results/"
+        "EUROJACKPOT": "https://www.eurojackpot.org/en/results/",
+        # European Lotteries - placeholder URLs (would need actual scraping logic)
+        "UK_NATIONAL_LOTTERY": "https://www.national-lottery.co.uk/results/lotto/draw-history",
+        "LA_PRIMITIVA": "https://www.loteriasyapuestas.es/en/la-primitiva",
+        "SUPERENALOTTO": "https://www.superenalotto.com/en/results",
+        "LOTO_FRANCE": "https://www.fdj.fr/jeux-de-tirage/loto",
+        "LOTTO_6AUS49": "https://www.lotto.de/lotto-6aus49/lottozahlen",
+        "AUSTRIAN_LOTTO": "https://www.win2day.at/lottery/lotto",
+        "SWISS_LOTTO": "https://www.swisslos.ch/en/swisslotto/information/winning-numbers.html",
     }
     try:
         response = requests.get(urls[game], timeout=10)
@@ -239,17 +442,20 @@ def _load_all_history(game: str, use_online: bool = False) -> Tuple[pd.DataFrame
         return pd.DataFrame(), f"No valid data loaded. Issues: {', '.join(skipped)}"
 
     df = pd.concat(frames, ignore_index=True)
-    if game == "LOTTO":
+    # Sort main numbers based on game type
+    if spec.main_pick == 6:
+        # Games with 6 main picks (with or without secondary numbers)
         arr = np.sort(df[["n1","n2","n3","n4","n5","n6"]].to_numpy(), axis=1)
         df[["n1","n2","n3","n4","n5","n6"]] = arr
     else:
+        # Games with 5 main picks
         arr = np.sort(df[["n1","n2","n3","n4","n5"]].to_numpy(), axis=1)
         df[["n1","n2","n3","n4","n5"]] = arr
 
     ok = np.ones(len(df), dtype=bool)
     for c in ["n1","n2","n3","n4","n5"]:
         ok &= df[c].between(1, spec.main_max, inclusive="both")
-    if spec.name == "LOTTO":
+    if spec.main_pick == 6 and "n6" in df.columns:
         ok &= df["n6"].between(1, spec.main_max, inclusive="both")
     if spec.sec_pick == 1 and "joker" in df.columns:
         ok &= df["joker"].between(1, spec.sec_max, inclusive="both")
@@ -340,7 +546,7 @@ def _luck_vectors(df: pd.DataFrame, game: str, spec: GameSpec) -> Tuple[np.ndarr
     seen_last = {i: None for i in range(1, spec.main_max+1)}
     for idx, row in df.reset_index(drop=True).iterrows():
         present = set([int(row[c]) for c in ["n1","n2","n3","n4","n5"]])
-        if spec.name == "LOTTO":
+        if spec.main_pick == 6 and "n6" in row:
             present.add(int(row["n6"]))
         for n in range(1, spec.main_max+1):
             last = seen_last[n]
@@ -360,7 +566,7 @@ def ml_probs(df: pd.DataFrame, game: str, cfg: Config, main_max: int) -> Optiona
         return None
 
     spec = GAMES[game]
-    cols = ["n1","n2","n3","n4","n5"] + (["n6"] if spec.name == "LOTTO" else [])
+    cols = ["n1","n2","n3","n4","n5"] + (["n6"] if spec.main_pick == 6 else [])
     pick_size = len(cols)
 
     # ---------- Feature engineering per row ----------
@@ -515,7 +721,7 @@ def build_probs(df: pd.DataFrame, game: str, cfg: Config) -> Tuple[np.ndarray, O
         return np.ones(spec.main_max)/spec.main_max, (np.ones(spec.sec_max)/spec.sec_max if spec.sec_pick>0 else None)
 
     main_counts = np.zeros(spec.main_max, dtype=float)
-    cols = ["n1","n2","n3","n4","n5"] + (["n6"] if spec.name=="LOTTO" else [])
+    cols = ["n1","n2","n3","n4","n5"] + (["n6"] if spec.main_pick == 6 else [])
     for _, row in df.iterrows():
         for c in cols:
             main_counts[int(row[c])-1] += 1.0
@@ -762,7 +968,7 @@ def evaluate_cv(df: pd.DataFrame, game: str, cfg: Config, folds: int = 10) -> pd
         port = dpp_select(cands, game, cfg) if cfg.optimizer=="DPP" else cands[:cfg.portfolio_size]
         t = test.iloc[0]
         spec = GAMES[game]
-        test_main = set([int(t[c]) for c in ["n1","n2","n3","n4","n5"]] + (["n6"] if spec.name=="LOTTO" else []))
+        test_main = set([int(t[c]) for c in ["n1","n2","n3","n4","n5"]] + (["n6"] if spec.main_pick == 6 else []))
         bonus = None
         if spec.sec_pick == 1 and "joker" in test.columns:
             bonus = int(t["joker"])
@@ -796,13 +1002,13 @@ def self_learning_replay(df: pd.DataFrame, game: str, cfg: Config, rounds: int =
             cands, _ = generate_candidates(train, game, cfg)
             port = dpp_select(cands, game, cfg) if cfg.optimizer=="DPP" else cands[:cfg.portfolio_size]
             t = test.iloc[0]
-            tmain = set([int(t[c]) for c in ["n1","n2","n3","n4","n5"]] + (["n6"] if spec.name=="LOTTO" else []))
+            tmain = set([int(t[c]) for c in ["n1","n2","n3","n4","n5"]] + (["n6"] if spec.main_pick == 6 else []))
             bh = 0
             for m, s, _ in port:
                 bh = max(bh, len(tmain.intersection(set(m))))
             hits.append(bh)
         avg_hit = float(np.mean(hits)) if hits else 0.0
-        baseline = 1.2 if spec.name!="LOTTO" else 1.4
+        baseline = 1.2 if spec.main_pick != 6 else 1.4
         if avg_hit < baseline:
             beta = min(0.5, beta + step_beta)
             gamma = max(0.0, gamma - step_gamma)
@@ -870,7 +1076,7 @@ def apply_ev_rerank(game: str, cfg: Config, portfolio: List[Tuple[List[int], obj
 def plot_frequency(df: pd.DataFrame, game: str):
     spec = GAMES[game]
     counts = np.zeros(spec.main_max, dtype=int)
-    itcols = ["n1","n2","n3","n4","n5"] + (["n6"] if spec.name=="LOTTO" else [])
+    itcols = ["n1","n2","n3","n4","n5"] + (["n6"] if spec.main_pick == 6 else [])
     for _, r in df.iterrows():
         for c in itcols:
             counts[int(r[c])-1] += 1
@@ -887,7 +1093,7 @@ def plot_recency(df: pd.DataFrame, game: str):
     for i, (_, r) in enumerate(df.iterrows()):
         for c in ["n1","n2","n3","n4","n5"]:
             last[int(r[c])-1] = i
-        if spec.name == "LOTTO":
+        if spec.main_pick == 6 and "n6" in r:
             last[int(r["n6"])-1] = i
     rec = np.where(last>=0, last, 0)
     if rec.max()>0: rec = rec / rec.max()
@@ -901,7 +1107,7 @@ def plot_recency(df: pd.DataFrame, game: str):
 def plot_last_digit(df: pd.DataFrame, game: str):
     spec = GAMES[game]
     digs = np.zeros(10, dtype=int)
-    itcols = ["n1","n2","n3","n4","n5"] + (["n6"] if spec.name=="LOTTO" else [])
+    itcols = ["n1","n2","n3","n4","n5"] + (["n6"] if spec.main_pick == 6 else [])
     for _, r in df.iterrows():
         for c in itcols:
             digs[int(r[c]) % 10] += 1
@@ -916,7 +1122,7 @@ def plot_pairs_heatmap(df: pd.DataFrame, game: str):
     spec = GAMES[game]
     M = spec.main_max
     mat = np.zeros((M,M), dtype=int)
-    itcols = ["n1","n2","n3","n4","n5"] + (["n6"] if spec.name=="LOTTO" else [])
+    itcols = ["n1","n2","n3","n4","n5"] + (["n6"] if spec.main_pick == 6 else [])
     for _, r in df.iterrows():
         vals = sorted([int(r[c]) for c in itcols])
         for a, b in itertools.combinations(vals, 2):
@@ -934,7 +1140,7 @@ def plot_pairs_heatmap(df: pd.DataFrame, game: str):
 
 def plot_odd_even(df: pd.DataFrame, game: str):
     spec = GAMES[game]
-    itcols = ["n1","n2","n3","n4","n5"] + (["n6"] if spec.name=="LOTTO" else [])
+    itcols = ["n1","n2","n3","n4","n5"] + (["n6"] if spec.main_pick == 6 else [])
     odds = df[itcols].apply(lambda row: int(np.sum(np.array(row) % 2 == 1)), axis=1)
     fig = plt.figure(figsize=(6,3))
     plt.hist(odds, bins=range(0, spec.main_pick+2), color='purple', edgecolor='black', align='left')
