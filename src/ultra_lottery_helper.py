@@ -902,6 +902,7 @@ def ml_probs(df: pd.DataFrame, game: str, cfg: Config, main_max: int) -> Optiona
 
     blended = np.zeros(main_max, dtype=float)
     for (name, est, w) in zip([m[0] for m in models], [m[1] for m in models], weights):
+        tmp = None
         try:
             proba = est.predict_proba(latest_feats)[0]
             classes = est.classes_
@@ -913,6 +914,8 @@ def ml_probs(df: pd.DataFrame, game: str, cfg: Config, main_max: int) -> Optiona
                 tmp = tmp / tmp.sum()
             blended += w * tmp
         except Exception:
+            tmp = None
+        if tmp is None:
             continue
 
     if prophet_probs is not None:
