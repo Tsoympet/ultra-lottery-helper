@@ -96,7 +96,7 @@ dependencies = [
     "PySide6>=6.0.0",
     "requests>=2.25.0",
     "filelock>=3.19.1",
-    "marshmallow>=4.0.0,<4.1.0",
+    "marshmallow>=4.0.1,<4.1.0",
 ]
 
 [project.optional-dependencies]
