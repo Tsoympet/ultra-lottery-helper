@@ -15,4 +15,4 @@ prophet
 # Utils
 requests
 filelock>=3.19.1
-marshmallow>=4.1.2
+marshmallow>=4.0.0,<4.1.0
