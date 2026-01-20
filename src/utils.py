@@ -101,7 +101,8 @@ def save_json(
     path: Union[str, Path],
     data: Any,
     atomic: bool = True,
-    logger: Optional[logging.Logger] = None
+    logger: Optional[logging.Logger] = None,
+    redact_sensitive: bool = True,
 ) -> None:
     """
     Save data to JSON file with proper error handling.
@@ -112,18 +113,35 @@ def save_json(
         atomic: If True, write to temp file first then rename (prevents corruption)
         logger: Optional logger for error reporting
         
+    Args:
+        redact_sensitive: If True, common secret keys are masked before writing.
+
     Raises:
         ValueError: If data cannot be serialized to JSON
         IOError: If file cannot be written
     """
     path = Path(path)
+
+    SENSITIVE_JSON_KEYS = {"password", "token", "secret", "api_key", "apikey"}
+
+    def _redact(value: Any) -> Any:
+        """Return a copy with sensitive values masked."""
+        if isinstance(value, dict):
+            return {
+                k: ("***" if k.lower() in SENSITIVE_JSON_KEYS else _redact(v))
+                for k, v in value.items()
+            }
+        if isinstance(value, list):
+            return [_redact(v) for v in value]
+        return value
     
     try:
         # Ensure parent directory exists
         path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         # Serialize to JSON
-        json_str = json.dumps(data, indent=2, ensure_ascii=False)
+        payload = _redact(data) if redact_sensitive else data
+        json_str = json.dumps(payload, indent=2, ensure_ascii=False)
         
         if atomic:
             # Write to temp file first, then rename

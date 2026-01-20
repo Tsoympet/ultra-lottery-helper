@@ -696,7 +696,10 @@ def _html_response(handler: BaseHTTPRequestHandler, payload: bytes, status: int 
 def _asset_response(handler: BaseHTTPRequestHandler, request_path: str):
     """Serve small static assets (icons/flags)."""
     rel = request_path[len("/assets/") :] if request_path.startswith("/assets/") else ""
-    candidate = (ASSETS_ROOT / rel).resolve()
+    rel_path = Path(rel)
+    if rel_path.is_absolute() or ".." in rel_path.parts:
+        return _json_response(handler, {"error": "Asset not found"}, status=404)
+    candidate = (ASSETS_ROOT / rel_path).resolve()
     if not candidate.exists():
         return _json_response(handler, {"error": "Asset not found"}, status=404)
     candidate_resolved = candidate.resolve()
