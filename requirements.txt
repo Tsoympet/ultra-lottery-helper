@@ -14,5 +14,8 @@ prophet
 
 # Utils
 requests>=2.32.3
+filelock>=3.20.3
+marshmallow>=4.1.2,<4.2.0
 filelock>=3.19.1
 marshmallow>=4.1.2,<4.2.0
+marshmallow>=4.1.2,<5
