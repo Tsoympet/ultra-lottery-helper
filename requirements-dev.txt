@@ -1,6 +1,7 @@
 # Security and Code Quality Tools Configuration
 
 ## Development Dependencies
+numpy>=1.20.0
 safety>=2.3.0
 bandit[toml]>=1.7.0
 black>=23.0.0
