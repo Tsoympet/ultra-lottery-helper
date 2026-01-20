@@ -1,12 +1,8 @@
 # Υπέρτατος Βοηθός Λαχείων (Oracle Lottery Predictor)
 [English](README.md) | [Ελληνικά](README.el.md)
 
-[![CI](https://github.com/Tsoympet/ultra-lottery-helper/actions/workflows/ci.yaml/badge.svg)](https://github.com/Tsoympet/ultra-lottery-helper/actions/workflows/ci.yaml)
-[![Build & Sign Release](https://github.com/Tsoympet/ultra-lottery-helper/actions/workflows/build-sign-release.yml/badge.svg)](https://github.com/Tsoympet/ultra-lottery-helper/actions/workflows/build-sign-release.yml)
-[![Windows Installer](https://github.com/Tsoympet/ultra-lottery-helper/actions/workflows/build-windows-installer.yaml/badge.svg)](https://github.com/Tsoympet/ultra-lottery-helper/actions/workflows/build-windows-installer.yaml)
-[![Release Checklist](https://github.com/Tsoympet/ultra-lottery-helper/actions/workflows/release-checklist.yml/badge.svg)](https://github.com/Tsoympet/ultra-lottery-helper/actions/workflows/release-checklist.yml)
-[![Run Lottery](https://github.com/Tsoympet/ultra-lottery-helper/actions/workflows/run-lottery.yml/badge.svg)](https://github.com/Tsoympet/ultra-lottery-helper/actions/workflows/run-lottery.yml)
-[![Dependency Scan](https://github.com/Tsoympet/ultra-lottery-helper/actions/workflows/dependency-scan.yml/badge.svg)](https://github.com/Tsoympet/ultra-lottery-helper/actions/workflows/dependency-scan.yml)
+[![CI](https://github.com/Tsoympet/ultra-lottery-helper/workflows/CI/badge.svg)](https://github.com/Tsoympet/ultra-lottery-helper/actions/workflows/ci.yaml)
+[![Release](https://github.com/Tsoympet/ultra-lottery-helper/workflows/Release/badge.svg)](https://github.com/Tsoympet/ultra-lottery-helper/actions/workflows/build-sign-release.yml)
 [![Python](https://img.shields.io/badge/Python-3.10+-blue)](#)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](#)
 
